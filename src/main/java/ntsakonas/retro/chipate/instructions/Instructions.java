@@ -36,7 +36,8 @@ public class Instructions
                 return new ReturnFromSubroutine(address,lsb,msb);
             else if (Byte.toUnsignedInt(msb) == 0xE0)
                 return new EraseDisplay(address,lsb,msb);
-            return null;
+            else
+                return new DoMachineLanguageSubroutine(address,lsb,msb);
         };
 
         Handler class01handler = (address, lsb, msb) -> new Goto(address,lsb,msb,false);

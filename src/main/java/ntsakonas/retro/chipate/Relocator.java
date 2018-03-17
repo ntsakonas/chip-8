@@ -71,5 +71,4 @@ public class Relocator
         byte[] relocatedRomBytes = relocator.relocate(romBytes,0x0000);
         Files.write(Paths.get(args[1]),relocatedRomBytes);
     }
-
 }
