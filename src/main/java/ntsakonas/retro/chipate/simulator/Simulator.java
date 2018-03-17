@@ -1,0 +1,65 @@
+package ntsakonas.retro.chipate.simulator;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+public class Simulator
+{
+    private Chip8System chip8System;
+    private ChipInstructionMicrocodeDecoder decoder;
+    private ChipInstructionExecutor executor;
+
+    public Simulator()
+    {
+        chip8System = new Chip8System();
+        decoder = ChipInstructionMicrocodeDecoder.decoder();
+        executor = new BaseInstructionSetExecutor();
+    }
+
+
+    public void run(byte[] romBytes)
+    {
+        chip8System.placeRomInMemory(romBytes);
+        startExecution();
+    }
+
+    private void startExecution()
+    {
+        setSomeInitialRegisterValues();
+        chip8System.displayResisters();
+
+        int programCounter = chip8System.getProgramCounter();
+        while (true)
+        {
+            byte instructionLsb = chip8System.systemState().readMemory(programCounter);
+            byte instructionMsb = chip8System.systemState().readMemory(programCounter + 1);
+
+            ChipInstructionMicrocode microCode = decoder.decode(instructionLsb, instructionMsb);
+            executor.executeCode(microCode, instructionLsb, instructionMsb,chip8System.systemState());
+            programCounter = chip8System.getProgramCounter();
+            chip8System.displayResisters();
+        }
+    }
+
+    private void setSomeInitialRegisterValues()
+    {
+        for (int i=0;i<16;i++)
+        chip8System.systemState().setRegister(i,(byte)i);
+    }
+
+
+    public static void main(String[] args) throws IOException
+    {
+        if (args.length == 0)
+        {
+            System.out.println("--- Chip-8 simulator by Nick Tsakonas (c) 2018");
+            System.out.println("--- usage simulator input.rom [base]");
+            System.out.println("          input.rom  - the rom to execute (located at 0x0200)");
+            return;
+        }
+        byte[] romBytes = Files.readAllBytes(Paths.get(args[0]));
+        Simulator simulator = new Simulator();
+        simulator.run(romBytes);
+    }
+}
