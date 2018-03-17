@@ -39,6 +39,7 @@ public class Simulator
             executor.executeCode(microCode, instructionLsb, instructionMsb,chip8System.systemState());
             programCounter = chip8System.getProgramCounter();
             chip8System.displayResisters();
+            chip8System.singleStep();
         }
     }
 

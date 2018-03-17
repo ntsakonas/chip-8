@@ -1,6 +1,8 @@
 package ntsakonas.retro.chipate.simulator;
 
 import java.util.Arrays;
+import java.util.Locale;
+import java.util.Scanner;
 
 public class Chip8System
 {
@@ -240,6 +242,22 @@ public class Chip8System
     public SystemState systemState()
     {
         return systemState;
+    }
+
+    // Debugging helpers
+    public void singleStep()
+    {
+        createInputScanner();
+        //inputScanner.useLocale(LOCALE);
+        System.out.print("(BREAK)>");
+        inputScanner.nextLine();
+
+    }
+    private static Scanner inputScanner = null;
+    private void createInputScanner()
+    {
+        if (inputScanner  == null)
+            inputScanner = new Scanner(new java.io.BufferedInputStream(System.in), "UTF-8");
     }
 
     public void displayResisters()

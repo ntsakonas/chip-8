@@ -49,10 +49,12 @@ abstract class ChipInstructionMicrocodeDecoder
             if (lsb ==0x00 && msb == (byte)0xEE)
                 state.returnFromSubroutine();
             else if (lsb ==0x00 && msb == (byte)0xE0)
+            {
                 state.eraseDisplay();
+                state.setProgramCounter(state.getProgramCounter() + 2);
+            }
             else
                 throw new RuntimeException("sorry, cannot run roms that call machine language code.");
-            state.setProgramCounter(state.getProgramCounter() + 2);
         };
 
 
@@ -65,6 +67,7 @@ abstract class ChipInstructionMicrocodeDecoder
         private ChipInstructionMicrocode Class2Microcode = (lsb, msb, state) ->
         {
             int targetAddress = OpcodeUtil.addressFrom(lsb,msb);
+            state.setProgramCounter(state.getProgramCounter() + 2);
             state.enterSubroutine();
             state.setProgramCounter(targetAddress);
         };
@@ -248,16 +251,13 @@ abstract class ChipInstructionMicrocodeDecoder
             {
                 throw new RuntimeException(String.format("unknown instruction [%02X %02X]",lsb,msb));
             }
-
             state.setProgramCounter(state.getProgramCounter() + 2);
         };
-
 
         public ChipInstructionMicrocode decode(byte lsb, byte msb)
         {
             int[] lsbNibbles = OpcodeUtil.nibbles(lsb);
             return microcodeHanlders[lsbNibbles[0]];
         }
-
     }
 }
