@@ -2,6 +2,8 @@ package ntsakonas.retro.chipate.simulator;
 
 import ntsakonas.retro.chipate.instructions.OpcodeUtil;
 
+import java.util.Random;
+
 abstract class ChipInstructionMicrocodeDecoder
 {
 
@@ -124,11 +126,11 @@ abstract class ChipInstructionMicrocodeDecoder
                 s.setRegister(X, s.getRegister(Y));
             } else if (operation == 1)
             {
-                //TODO:: find how VF is changed
-                s.setRegister(X, (byte) (Byte.toUnsignedInt(s.getRegister(X)) / Byte.toUnsignedInt(s.getRegister(Y))));
+                // in the real Chip-8 VF is changed because it is used as temporary storage
+                s.setRegister(X, (byte) (Byte.toUnsignedInt(s.getRegister(X)) | Byte.toUnsignedInt(s.getRegister(Y))));
             } else if (operation == 2)
             {
-                //TODO:: find how VF is changed
+                // in the real Chip-8 VF is changed because it is used as temporary storage
                 s.setRegister(X, (byte) (Byte.toUnsignedInt(s.getRegister(X)) & Byte.toUnsignedInt(s.getRegister(Y))));
             } else if (operation == 4)
             {
@@ -170,7 +172,8 @@ abstract class ChipInstructionMicrocodeDecoder
         private ChipInstructionMicrocode ClassCMicrocode = (lsb, msb, state) ->
         {
             int X = OpcodeUtil.nibbles(lsb)[1];
-            byte rand = msb; // TODO I need to implement the masking
+            Random random = new Random();
+            byte rand = (byte) ((random.nextInt(256) & Byte.toUnsignedInt(msb)) & 0xff);
             state.setRegister(X,rand);
             state.setProgramCounter(state.getProgramCounter() + 2);
         };
