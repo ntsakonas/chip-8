@@ -9,6 +9,7 @@ public class Simulator
     private Chip8System chip8System;
     private ChipInstructionMicrocodeDecoder decoder;
     private ChipInstructionExecutor executor;
+    private boolean terminated;
 
     public Simulator()
     {
@@ -29,14 +30,20 @@ public class Simulator
             System.out.println(String.format("Error during execution at address %04X",chip8System.systemState().getProgramCounter()));
             e.printStackTrace();
         }
+    }
 
+    public void terminate()
+    {
+        terminated = true;
+        chip8System.shutdown();
     }
 
     private void startExecution()
     {
         int programCounter = chip8System.getProgramCounter();
         int dgbInstructionCounter = 0;
-        while (true)
+        terminated = false;
+        while (!terminated)
         {
             byte instructionLsb = chip8System.systemState().readMemory(programCounter);
             byte instructionMsb = chip8System.systemState().readMemory(programCounter + 1);
@@ -45,9 +52,9 @@ public class Simulator
             executor.executeCode(microCode, instructionLsb, instructionMsb,chip8System.systemState());
             programCounter = chip8System.getProgramCounter();
             //chip8System.singleStep();
-            dgbInstructionCounter = dgbInstructionCounter % 4;
-            if (dgbInstructionCounter == 0)
-               chip8System.displayVram();
+            //dgbInstructionCounter = dgbInstructionCounter % 4;
+            //if (dgbInstructionCounter == 0)
+            //   chip8System.displayVram();
         }
     }
 
