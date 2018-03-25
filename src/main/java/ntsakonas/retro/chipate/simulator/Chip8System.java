@@ -1,7 +1,6 @@
 package ntsakonas.retro.chipate.simulator;
 
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.Scanner;
 
 public class Chip8System
@@ -64,6 +63,7 @@ public class Chip8System
 
     private final int AVAILABLE_RAM = 2048;
     private final int RAM_PAGE_SIZE = 256;
+    private final int VIDEO_RAM_SIZE = 256;
     private final int PROGRAM_START = 0x200;
     private byte[] ram = new byte[AVAILABLE_RAM];
     private int videoRamBaseAddress;
@@ -74,6 +74,7 @@ public class Chip8System
     private int indexRegister;
     private int highestProgramMemoryAddress;
     private SystemState systemState;
+    private Object videoRamLock = new Object();
 
     public Chip8System()
     {
@@ -104,15 +105,11 @@ public class Chip8System
             @Override
             public byte readMemory(int address)
             {
-                if (address <0)
+                // if it is synthetic address, we need to read from the digit pattern table
+                if ((address & 0xFFFF0000) == 0xDEAD0000)
+                    return DIGIT_DISPLAY_PATTERNS [address & 0xff];
+                if (address <0 || address > AVAILABLE_RAM)
                     throw new IllegalArgumentException(String.format("read memory:out of bounds address: cannot read from address %d",address));
-                if (address > AVAILABLE_RAM)
-                {
-                    // if it is sythetic address, we need to read from the digit pattern table
-                    if ((address & 0xFFFF0000) == 0xDEAD0000)
-                        return DIGIT_DISPLAY_PATTERNS [address & 0xff];
-                    throw new IllegalArgumentException(String.format("read memory:out of bounds address: cannot read from address %d",address));
-                }
                 return ram[address];
             }
 
@@ -166,17 +163,54 @@ public class Chip8System
                 return indexRegister;
             }
 
+
             @Override
             public boolean writeVram(byte x, byte y, byte pattern)
             {
-                // TODO:: implement vram;
-                return false;
+                //System.out.println(String.format("writeVram x=%d , y=%d , p=%x",Byte.toUnsignedInt(x),Byte.toUnsignedInt(y),Byte.toUnsignedInt(pattern)));
+
+                synchronized (videoRamLock)
+                {
+                    final int SCREEN_WIDTH_PIXELS = 64;
+                    final int SCREEN_HEIGHT_PIXELS = 32;
+                    int vramOffsetForMSB = videoRamBaseAddress + (SCREEN_WIDTH_PIXELS * y + x) / 8;
+                    int vramOffsetForLSB = vramOffsetForMSB + 1;
+                    int patternShiftCount = x % 8;
+                    if (patternShiftCount == 0)
+                    {
+                        // x position is aligned to byte in vram
+                        byte vramPattern = ram[vramOffsetForMSB];
+                        ram[vramOffsetForMSB] = (byte) (vramPattern ^ pattern);
+                        return  (vramPattern & pattern) !=0;
+                    }else
+                    {
+                        // x position not aligned to byte in vram
+                        int patternToShift = Byte.toUnsignedInt(pattern);
+                        byte msbPattern = (byte) ((patternToShift >> patternShiftCount) & 0xff);
+                        byte lsbPattern = (byte) ((patternToShift << (8 - patternShiftCount)) & 0xff);
+
+                        byte vramPatternMSB = ram[vramOffsetForMSB];
+                        ram[vramOffsetForMSB] = (byte) (vramPatternMSB ^ msbPattern);
+                        boolean collisionInLsb = false;
+                        if (vramOffsetForLSB < videoRamBaseAddress + VIDEO_RAM_SIZE)
+                        {
+                            byte vramPatternLSB = ram[vramOffsetForLSB];
+                            ram[vramOffsetForLSB] = (byte) (vramPatternLSB ^ lsbPattern);
+                            collisionInLsb =((vramPatternLSB & lsbPattern) !=0);
+                        }
+                        return  ((vramPatternMSB & msbPattern) !=0) || collisionInLsb;
+                    }
+                }
             }
 
             @Override
             public void eraseDisplay()
             {
-                // todo:: implement display and vram clearn
+                synchronized (videoRamLock)
+                {
+                    for (int i = 0; i < VIDEO_RAM_SIZE; i++)
+                        ram[videoRamBaseAddress + i] = 0;
+                }
             }
 
             @Override
@@ -248,10 +282,25 @@ public class Chip8System
     public void singleStep()
     {
         createInputScanner();
-        //inputScanner.useLocale(LOCALE);
-        System.out.print("(BREAK)>");
-        inputScanner.nextLine();
-
+        boolean getMoreInput = true;
+        while (getMoreInput)
+        {
+            //inputScanner.useLocale(LOCALE);
+            System.out.print("(BREAK)>");
+            String command = inputScanner.nextLine();
+            switch (command)
+            {
+                case "s":
+                    getMoreInput = false;
+                    break;
+                case "r":
+                    displayResisters();
+                    break;
+                case "vr":
+                    displayVram();
+                    break;
+            }
+        }
     }
     private static Scanner inputScanner = null;
     private void createInputScanner()
@@ -284,7 +333,33 @@ public class Chip8System
         }
         System.out.println(stackDump.toString());
         System.out.println("---------------------------------------------");
-
     }
 
+    public void displayVram()
+    {
+        //System.out.println("-----------------VRAM-----------------------");
+        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+
+        StringBuilder lineBuffer = new StringBuilder();
+        for (int y =0;y<32;y++)
+        {
+            for (int x = 0; x < 8; x++)
+            {
+                int vramPattern = Byte.toUnsignedInt(ram[videoRamBaseAddress + 8 * y + x]);
+                int vramPatternMask = 0x80;
+                for (int pixel=0;pixel<8;pixel++)
+                {
+                    if ((vramPattern & vramPatternMask) == vramPatternMask)
+                        lineBuffer.append("*");
+                    else
+                        lineBuffer.append(".");
+                    vramPatternMask >>=1;
+                }
+            }
+            System.out.println(lineBuffer.toString());
+            lineBuffer.setLength(0);
+        }
+        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+
+    }
 }

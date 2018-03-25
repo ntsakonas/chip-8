@@ -21,15 +21,21 @@ public class Simulator
     public void run(byte[] romBytes)
     {
         chip8System.placeRomInMemory(romBytes);
-        startExecution();
+        try
+        {
+            startExecution();
+        }catch (Exception e)
+        {
+            System.out.println(String.format("Error during execution at address %04X",chip8System.systemState().getProgramCounter()));
+            e.printStackTrace();
+        }
+
     }
 
     private void startExecution()
     {
-        setSomeInitialRegisterValues();
-        chip8System.displayResisters();
-
         int programCounter = chip8System.getProgramCounter();
+        int dgbInstructionCounter = 0;
         while (true)
         {
             byte instructionLsb = chip8System.systemState().readMemory(programCounter);
@@ -38,17 +44,12 @@ public class Simulator
             ChipInstructionMicrocode microCode = decoder.decode(instructionLsb, instructionMsb);
             executor.executeCode(microCode, instructionLsb, instructionMsb,chip8System.systemState());
             programCounter = chip8System.getProgramCounter();
-            chip8System.displayResisters();
-            chip8System.singleStep();
+            //chip8System.singleStep();
+            dgbInstructionCounter = dgbInstructionCounter % 4;
+            if (dgbInstructionCounter == 0)
+               chip8System.displayVram();
         }
     }
-
-    private void setSomeInitialRegisterValues()
-    {
-        for (int i=0;i<16;i++)
-        chip8System.systemState().setRegister(i,(byte)i);
-    }
-
 
     public static void main(String[] args) throws IOException
     {

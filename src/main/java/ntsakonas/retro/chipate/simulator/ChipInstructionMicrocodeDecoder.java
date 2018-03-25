@@ -16,7 +16,7 @@ abstract class ChipInstructionMicrocodeDecoder
 
     private static class BaseInstructionSetDecoder extends ChipInstructionMicrocodeDecoder
     {
-        ChipInstructionMicrocode[] microcodeHanlders;
+        ChipInstructionMicrocode[] microcodeHandlers;
 
         BaseInstructionSetDecoder()
         {
@@ -25,7 +25,7 @@ abstract class ChipInstructionMicrocodeDecoder
 
         private void initialiseMicroCodeHanlder()
         {
-            microcodeHanlders = new ChipInstructionMicrocode[]
+            microcodeHandlers = new ChipInstructionMicrocode[]
                     {
                        Class0Microcode,
                        Class1Microcode,
@@ -56,7 +56,7 @@ abstract class ChipInstructionMicrocodeDecoder
                 state.setProgramCounter(state.getProgramCounter() + 2);
             }
             else
-                throw new RuntimeException("sorry, cannot run roms that call machine language code.");
+                throw new RuntimeException(String.format("sorry, cannot run roms that call machine language code pc=%04X",state.getProgramCounter()));
         };
 
 
@@ -187,11 +187,14 @@ abstract class ChipInstructionMicrocodeDecoder
             int I = state.getIndexRegister();
             // patterns are 1 byte wide and up to 15 bytes long
             int numOfPatternBytes = (Math.min(N,15));
+            byte posX = state.getRegister(X);
+            byte posY = state.getRegister(Y);
+            //System.out.println(String.format("write %d (%d) @ (%d,%d)",numOfPatternBytes,N,posX,posY));
             boolean matched = false;
             for (int i=0;i<numOfPatternBytes;i++)
             {
                 byte patternByte = state.readMemory(state.getIndexRegister() + i);
-                matched |= state.writeVram(state.getRegister(X),state.getRegister(Y),patternByte);
+                matched |= state.writeVram(posX, (byte) ((posY + i) & 0xff),patternByte);
             }
             if (matched)
                 state.setRegister(0x0F, (byte) 1);
@@ -200,7 +203,7 @@ abstract class ChipInstructionMicrocodeDecoder
 
         private ChipInstructionMicrocode ClassEMicrocode = (lsb, msb, state) ->
         {
-            if (msb != 0x9E && msb != 0xA1)
+            if (msb != (byte)0x9E && msb != (byte)0xA1)
                 throw new RuntimeException(String.format("unknown instruction [%02X %02X]",lsb,msb));
 
             int X = OpcodeUtil.nibbles(lsb)[1];
@@ -260,7 +263,7 @@ abstract class ChipInstructionMicrocodeDecoder
         public ChipInstructionMicrocode decode(byte lsb, byte msb)
         {
             int[] lsbNibbles = OpcodeUtil.nibbles(lsb);
-            return microcodeHanlders[lsbNibbles[0]];
+            return microcodeHandlers[lsbNibbles[0]];
         }
     }
 }
