@@ -221,7 +221,7 @@ abstract class ChipInstructionMicrocodeDecoder
             if (msb == 0x07)
                 state.setRegister(X,state.getTimer());
             else if (msb == 0x0A)
-                state.setRegister(X,state.getKey()); // todo:: here I need the blocking version
+                state.setRegister(X,state.waitForKey());
             else if (msb == 0x15)
                 state.setTimer(state.getRegister(X));
             else if (msb == 0x18)
