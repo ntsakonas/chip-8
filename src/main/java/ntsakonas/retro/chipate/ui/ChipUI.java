@@ -18,33 +18,39 @@ public class ChipUI {
     {
         final int SCREEN_SIZE_X = 64;
         final int SCREEN_SIZE_Y = 32;
-        final int SCALE = 1;
+        final int SCALE = 3;
         @Override
         public void refresh(byte[] vram)
         {
-            System.out.println("---refresh---");
+//            System.out.println("---refresh---");
             final int displaySizeX = SCREEN_SIZE_X * SCALE;
             final int displaySizeY = SCREEN_SIZE_Y * SCALE;
-            BufferedImage vramImage = new BufferedImage(displaySizeX,displaySizeY+50,BufferedImage.TYPE_INT_RGB);
-            for (int y=0;y<displaySizeY;y++)
+            final int displayYBias = 50;
+            BufferedImage vramImage = new BufferedImage(displaySizeX,displaySizeY+displayYBias,BufferedImage.TYPE_INT_RGB);
+            for (int y=0;y<SCREEN_SIZE_Y;y++)
             {
-                for (int x=0;x<displaySizeX/8;x++)
+                for (int x=0;x<SCREEN_SIZE_X/8;x++)
                 {
                    int videoByte = getVideoByte(vram, y, x);
                    int mask = 0x80;
                    for (int bits=0;bits<8;bits++)
                    {
                        boolean isBitOn = ((videoByte & mask) == mask);
-                       int ypos = y + 50;
-                       int xpos = x * 8 + bits;
-                       vramImage.setRGB(xpos,ypos, isBitOn ? 0xffffff:0x000000);
+                       int ypos = y * SCALE + displayYBias;
+                       int xpos = (x * 8 + bits) * SCALE;
+                       if (SCALE == 1)
+                       {
+                           vramImage.setRGB(xpos, ypos, isBitOn ? 0xffffff : 0x000000);
+                       }else
+                       {
+                           for (int yRepeat = 0;yRepeat<SCALE;++yRepeat)
+                               for (int xRepeat = 0;xRepeat<SCALE;++xRepeat)
+                                   vramImage.setRGB(xpos+xRepeat, ypos+yRepeat, isBitOn ? 0xffffff : 0x000000);
+                       }
                        mask >>= 1;
                    }
                 }
             }
-
-            //BufferedImage vramImage = ImageIO.read(new ByteArrayInputStream(vram));
-            //BufferedImage vramImage = ImageIO.read(new File("/home/ntsakonas/Data/Projects/intelij/chip-8/image.jpg"));
             display.getGraphics().drawImage(vramImage, 0, 0, null);
             display.updateUI();
 
@@ -52,9 +58,7 @@ public class ChipUI {
 
         private int getVideoByte(byte[] vram, int y, int x)
         {
-            int realY = y/SCALE;
-            int realX = x/SCALE;
-            return Byte.toUnsignedInt(vram[realY * 8 + realX]);
+            return Byte.toUnsignedInt(vram[y * 8 + x]);
         }
     };
 
