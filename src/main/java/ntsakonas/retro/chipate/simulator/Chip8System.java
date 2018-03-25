@@ -1,6 +1,7 @@
 package ntsakonas.retro.chipate.simulator;
 
 import ntsakonas.retro.chipate.ConsoleInput;
+import ntsakonas.retro.chipate.SystemDisplay;
 
 import java.util.Arrays;
 import java.util.Scanner;
@@ -80,6 +81,7 @@ public class Chip8System
     private RealTimeClock rtc;
     private Keyboard keyboard;
     private SystemState systemState;
+    private SystemDisplay systemDisplay;
     private Object videoRamLock = new Object();
 
     private Object timerLock = new Object();
@@ -91,10 +93,18 @@ public class Chip8System
             if (timerTick > 0)
                 --timerTick;
         }
+
+        /*
+        synchronized (videoRamLock)
+        {
+            systemDisplay.refresh(Arrays.copyOfRange(ram,videoRamBaseAddress,videoRamBaseAddress+VIDEO_RAM_SIZE));
+        }*/
     };
 
-    public Chip8System()
+    public Chip8System(Keyboard keyboard,SystemDisplay systemDisplay)
     {
+        this.keyboard = keyboard;
+        this.systemDisplay = systemDisplay;
         initialiseSystem();
         prepareStateProvider();
     }
@@ -109,7 +119,6 @@ public class Chip8System
         stackPointer = stackTop;
         programCounter = PROGRAM_START;
         highestProgramMemoryAddress = (numberOfRamPages - 2) * RAM_PAGE_SIZE + 0xA0;
-        keyboard = new Keyboard();
         rtc = new RealTimeClock();
         rtc.start(rtcCallback);
         System.out.println(String.format("initialised: total RAM %d bytes, VideoRAM@%04X ,registers@%04X ,Stack@%04X ,PC=%04X , %d bytes available for code",
@@ -213,6 +222,7 @@ public class Chip8System
                         // x position is aligned to byte in vram
                         byte vramPattern = ram[vramOffsetForMSB];
                         ram[vramOffsetForMSB] = (byte) (vramPattern ^ pattern);
+                        refreshDisplay();
                         return  (vramPattern & pattern) !=0;
                     }else
                     {
@@ -230,6 +240,7 @@ public class Chip8System
                             ram[vramOffsetForLSB] = (byte) (vramPatternLSB ^ lsbPattern);
                             collisionInLsb =((vramPatternLSB & lsbPattern) !=0);
                         }
+                        refreshDisplay();
                         return  ((vramPatternMSB & msbPattern) !=0) || collisionInLsb;
                     }
                 }
@@ -311,7 +322,13 @@ public class Chip8System
         rtc.stop();
     }
 
+    private void refreshDisplay()
+    {
+        systemDisplay.refresh(Arrays.copyOfRange(ram,videoRamBaseAddress,videoRamBaseAddress+VIDEO_RAM_SIZE));
+    }
+
     // Debugging helpers
+    // remove them and create a small debugger :-)
     public void singleStep()
     {
         Scanner inputScanner = ConsoleInput.getInput();

@@ -1,5 +1,7 @@
 package ntsakonas.retro.chipate.simulator;
 
+import ntsakonas.retro.chipate.SystemDisplay;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -11,9 +13,9 @@ public class Simulator
     private ChipInstructionExecutor executor;
     private boolean terminated;
 
-    public Simulator()
+    public Simulator(Keyboard keyboard,SystemDisplay systemDisplay)
     {
-        chip8System = new Chip8System();
+        chip8System = new Chip8System(keyboard,systemDisplay);
         decoder = ChipInstructionMicrocodeDecoder.decoder();
         executor = new BaseInstructionSetExecutor();
     }
@@ -68,7 +70,10 @@ public class Simulator
             return;
         }
         byte[] romBytes = Files.readAllBytes(Paths.get(args[0]));
-        Simulator simulator = new Simulator();
+        Simulator simulator = new Simulator(new Keyboard(), vram ->
+        {
+
+        });
         simulator.run(romBytes);
     }
 }

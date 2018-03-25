@@ -4,12 +4,9 @@ import ntsakonas.retro.chipate.SystemDisplay;
 import ntsakonas.retro.chipate.simulator.Keyboard;
 import ntsakonas.retro.chipate.simulator.Simulator;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -19,21 +16,26 @@ public class ChipUI {
 
     SystemDisplay systemDisplay =  new SystemDisplay()
     {
+        final int SCREEN_SIZE_X = 64;
+        final int SCREEN_SIZE_Y = 32;
+        final int SCALE = 1;
         @Override
         public void refresh(byte[] vram)
         {
             System.out.println("---refresh---");
-            BufferedImage vramImage = new BufferedImage(64,32,BufferedImage.TYPE_INT_RGB);
-            for (int y=0;y<32;y++)
+            final int displaySizeX = SCREEN_SIZE_X * SCALE;
+            final int displaySizeY = SCREEN_SIZE_Y * SCALE;
+            BufferedImage vramImage = new BufferedImage(displaySizeX,displaySizeY+50,BufferedImage.TYPE_INT_RGB);
+            for (int y=0;y<displaySizeY;y++)
             {
-                for (int x=0;x<8;x++)
+                for (int x=0;x<displaySizeX/8;x++)
                 {
-                   int videoByte = Byte.toUnsignedInt(vram[y * 8 + x]);
+                   int videoByte = getVideoByte(vram, y, x);
                    int mask = 0x80;
                    for (int bits=0;bits<8;bits++)
                    {
                        boolean isBitOn = ((videoByte & mask) == mask);
-                       int ypos = y;
+                       int ypos = y + 50;
                        int xpos = x * 8 + bits;
                        vramImage.setRGB(xpos,ypos, isBitOn ? 0xffffff:0x000000);
                        mask >>= 1;
@@ -46,6 +48,13 @@ public class ChipUI {
             display.getGraphics().drawImage(vramImage, 0, 0, null);
             display.updateUI();
 
+        }
+
+        private int getVideoByte(byte[] vram, int y, int x)
+        {
+            int realY = y/SCALE;
+            int realX = x/SCALE;
+            return Byte.toUnsignedInt(vram[realY * 8 + realX]);
         }
     };
 
