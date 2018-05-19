@@ -15,13 +15,21 @@ public class AssignValue extends BaseChipInstruction
         if (variant == 0)
             return AssignValue.Register;
         else if (variant == 1)
-            return AssignValue.RegisterDivide;
+            return AssignValue.RegisterOr;
         else if (variant == 2)
             return AssignValue.RegisterAnd;
+        else if (variant == 3)
+            return AssignValue.RegisterXor;
         else if (variant == 4)
             return  AssignValue.RegisterAddition;
         else if (variant == 5)
             return AssignValue.RegisterSubtract;
+        else if (variant == 6)
+            return AssignValue.RegisterShiftRight;
+        else if (variant == 7)
+            return AssignValue.RegisterSubtractReverse;
+        else if (variant == 0x0E)
+            return AssignValue.RegisterShiftLeft;
         return  null;
     }
 
@@ -67,10 +75,14 @@ public class AssignValue extends BaseChipInstruction
     public static Assign StoreToI = (lsb, msb) -> String.format("MI = V0:V%d", OpcodeUtil.nibbles(lsb)[1]);
     public static Assign LoadFromI = (lsb, msb) -> String.format("V0:V%d = MI", OpcodeUtil.nibbles(lsb)[1]);
     public static Assign Register = (lsb, msb) -> String.format("V%d = V%d", OpcodeUtil.nibbles(lsb)[1],OpcodeUtil.nibbles(msb)[0]);
-    public static Assign RegisterDivide = (lsb, msb) -> String.format("V%d /= V%d", OpcodeUtil.nibbles(lsb)[1],OpcodeUtil.nibbles(msb)[0]);
+    public static Assign RegisterOr = (lsb, msb) -> String.format("V%d |= V%d", OpcodeUtil.nibbles(lsb)[1],OpcodeUtil.nibbles(msb)[0]);
     public static Assign RegisterAnd = (lsb, msb) -> String.format("V%d &= V%d", OpcodeUtil.nibbles(lsb)[1],OpcodeUtil.nibbles(msb)[0]);
+    public static Assign RegisterXor = (lsb, msb) -> String.format("V%d ^= V%d", OpcodeUtil.nibbles(lsb)[1],OpcodeUtil.nibbles(msb)[0]);
+    public static Assign RegisterShiftRight = (lsb, msb) -> String.format("V%d = V%d >> 1", OpcodeUtil.nibbles(lsb)[1],OpcodeUtil.nibbles(msb)[0]);
+    public static Assign RegisterShiftLeft = (lsb, msb) -> String.format("V%d = V%d << 1", OpcodeUtil.nibbles(lsb)[1],OpcodeUtil.nibbles(msb)[0]);
     public static Assign RegisterAddition = (lsb, msb) -> String.format("V%d += V%d", OpcodeUtil.nibbles(lsb)[1],OpcodeUtil.nibbles(msb)[0]);
     public static Assign RegisterSubtract = (lsb, msb) -> String.format("V%d -= V%d", OpcodeUtil.nibbles(lsb)[1],OpcodeUtil.nibbles(msb)[0]);
+    public static Assign RegisterSubtractReverse = (lsb, msb) -> String.format("V%d = V%d - V%d", OpcodeUtil.nibbles(lsb)[1],OpcodeUtil.nibbles(msb)[0],OpcodeUtil.nibbles(lsb)[1]);
     public static Assign Random = (lsb, msb) -> String.format("V%d = rand(%02X)", OpcodeUtil.nibbles(lsb)[1],msb);
     public static Assign TimerGet = (lsb, msb) -> String.format("V%d = timer()", OpcodeUtil.nibbles(lsb)[1]);
     public static Assign TimerSet = (lsb, msb) -> String.format("timer() = V%d", OpcodeUtil.nibbles(lsb)[1]);
