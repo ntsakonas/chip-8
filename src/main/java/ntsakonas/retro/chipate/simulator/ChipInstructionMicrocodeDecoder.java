@@ -132,6 +132,10 @@ abstract class ChipInstructionMicrocodeDecoder
             {
                 // in the real Chip-8 VF is changed because it is used as temporary storage
                 s.setRegister(X, (byte) (Byte.toUnsignedInt(s.getRegister(X)) & Byte.toUnsignedInt(s.getRegister(Y))));
+            } else if (operation == 3)
+            {
+                // part of the original instruction set but undocumented
+                s.setRegister(X, (byte) (Byte.toUnsignedInt(s.getRegister(X)) ^ Byte.toUnsignedInt(s.getRegister(Y))));
             } else if (operation == 4)
             {
                 int sum = (Byte.toUnsignedInt(s.getRegister(X)) + Byte.toUnsignedInt(s.getRegister(Y)));
@@ -144,7 +148,33 @@ abstract class ChipInstructionMicrocodeDecoder
                 int diff = (Byte.toUnsignedInt(x_value) - Byte.toUnsignedInt(y_value));
                 s.setRegister(X, (byte) (diff & 0xFF));
                 s.setRegister(0x0F, x_value < y_value ? (byte) 0 : (byte) 1);
-            }else
+            } else if (operation == 6)
+            {
+                // part of the original instruction set but undocumented
+                // NOTE:: there are too many conflicting opinions what the instruction does
+                // I chose to implement the version "shift Y value and save the result to X, modifying X)
+                int sourceValue = Byte.toUnsignedInt(s.getRegister(Y));
+                s.setRegister(X, (byte) (sourceValue >>> 1));
+                s.setRegister(0x0F, (byte)(sourceValue & 0x01));
+            }else if (operation == 7)
+            {
+                // part of the original instruction set but undocumented
+                // NOTE:: look like operation 5 but the subtraction order is reversed
+                byte x_value = s.getRegister(X);
+                byte y_value = s.getRegister(Y);
+                int diff = (Byte.toUnsignedInt(y_value) - Byte.toUnsignedInt(x_value));
+                s.setRegister(X, (byte) (diff & 0xFF));
+                s.setRegister(0x0F, y_value < x_value ? (byte) 0 : (byte) 1);
+            } else if (operation == 0x0E)
+            {
+                // part of the original instruction set but undocumented
+                // NOTE:: there are too many conflicting opinions what the instruction does
+                // I chose to implement the version "shift Y value and save the result to X, modifying X)
+                int sourceValue = Byte.toUnsignedInt(s.getRegister(Y));
+                s.setRegister(X, (byte) (sourceValue << 1));
+                s.setRegister(0x0F, (byte)(sourceValue & 0x80));
+            }
+            else
             {
                 throw new RuntimeException(String.format("unknown instruction [%02X %02X]",lsb,msb));
             }
