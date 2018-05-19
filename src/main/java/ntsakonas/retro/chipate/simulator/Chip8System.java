@@ -22,7 +22,7 @@ public class Chip8System
         int getIndexRegister();
         boolean writeVram(byte x, byte y, byte pattern);
         void eraseDisplay();
-        byte getKey();
+        boolean isKeyPressed(int keyCode);
         byte waitForKey();
         byte getTimer();
         void setTimer(byte value);
@@ -233,6 +233,7 @@ public class Chip8System
 
                         byte vramPatternMSB = ram[vramOffsetForMSB];
                         ram[vramOffsetForMSB] = (byte) (vramPatternMSB ^ msbPattern);
+                        boolean collisionInMsb = ((vramPatternMSB & msbPattern) !=0);
                         boolean collisionInLsb = false;
                         if (vramOffsetForLSB < videoRamBaseAddress + VIDEO_RAM_SIZE)
                         {
@@ -241,7 +242,7 @@ public class Chip8System
                             collisionInLsb =((vramPatternLSB & lsbPattern) !=0);
                         }
                         refreshDisplay();
-                        return  ((vramPatternMSB & msbPattern) !=0) || collisionInLsb;
+                        return  collisionInMsb || collisionInLsb;
                     }
                 }
             }
@@ -263,10 +264,16 @@ public class Chip8System
             }
 
             @Override
-            public byte getKey()
+            public boolean isKeyPressed(int keyCode)
+            {
+               return false;
+            }
+
+            // TODO:: I think I do not need it anymore
+            /* public byte getKey()
             {
                 return keyboard.getKeyPressed();
-            }
+            }*/
 
             @Override
             public byte getTimer()

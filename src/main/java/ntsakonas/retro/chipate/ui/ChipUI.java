@@ -6,6 +6,10 @@ import ntsakonas.retro.chipate.simulator.Simulator;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,7 +18,15 @@ import java.nio.file.Paths;
 public class ChipUI {
 
 
-    SystemDisplay systemDisplay =  new SystemDisplay()
+    SystemDisplay systemDisplay =  new SystemDisplay(){
+
+        @Override
+        public void refresh(byte[] vram)
+        {
+
+        }
+    };
+    SystemDisplay systemDisplay2 =  new SystemDisplay()
     {
         final int SCREEN_SIZE_X = 64;
         final int SCREEN_SIZE_Y = 32;
@@ -64,6 +76,7 @@ public class ChipUI {
 
     private JFrame topLevelFrame;
     private JPanel display;
+    private static Simulator simulator;
 
 
     public ChipUI()
@@ -73,7 +86,7 @@ public class ChipUI {
 
     public SystemDisplay getSystemDisplay()
     {
-        return systemDisplay;
+        return systemDisplay2;
     }
 
     /**
@@ -83,7 +96,7 @@ public class ChipUI {
      */
     private void createAndShowGUI() {
         //Create and set up the window.
-        topLevelFrame = new JFrame("TopLevelDemo");
+        topLevelFrame = new JFrame("Chip-8 Emulator");
         topLevelFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         topLevelFrame.setBackground(new Color(100, 213, 50));
         topLevelFrame.setPreferredSize(new Dimension(400, 380));
@@ -113,6 +126,40 @@ public class ChipUI {
 
         //frame.getContentPane().add(yellowLabel, BorderLayout.CENTER);
         //Display the window.
+        topLevelFrame.addKeyListener(new KeyListener()
+        {
+            @Override
+            public void keyTyped(KeyEvent keyEvent)
+            {
+                System.out.println("key typed:"+keyEvent.getKeyChar());
+            }
+
+            @Override
+            public void keyPressed(KeyEvent keyEvent)
+            {
+                System.out.println("key pressed:"+keyEvent.getKeyChar());
+            }
+
+            @Override
+            public void keyReleased(KeyEvent keyEvent)
+            {
+                System.out.println("key released:"+keyEvent.getKeyChar());
+            }
+        });
+
+        //topLevelFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        topLevelFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        topLevelFrame.addWindowListener(new WindowAdapter()
+        {
+            @Override
+            public void windowClosing(WindowEvent e)
+            {
+                simulator.terminate();
+                topLevelFrame.dispose();
+                System.out.println("exit");
+
+            }
+        });
         topLevelFrame.pack();
         topLevelFrame.setVisible(true);
 
@@ -135,7 +182,7 @@ public class ChipUI {
 
         javax.swing.SwingUtilities.invokeLater(() -> {
             ChipUI chipUI = new ChipUI();
-            Simulator simulator = new Simulator(new Keyboard(),chipUI.getSystemDisplay());
+            simulator = new Simulator(new Keyboard(),chipUI.getSystemDisplay());
             simulator.run(romBytes);
         });
 //        javax.swing.SwingUtilities.invokeLater(() -> createAndShowGUI(new File("/home/ntsakonas/Data/Projects/intelij/chip-8/image.jpg")));

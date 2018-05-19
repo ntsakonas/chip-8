@@ -20,10 +20,10 @@ abstract class ChipInstructionMicrocodeDecoder
 
         BaseInstructionSetDecoder()
         {
-            initialiseMicroCodeHanlder();
+            initialiseMicroCodeHandler();
         }
 
-        private void initialiseMicroCodeHanlder()
+        private void initialiseMicroCodeHandler()
         {
             microcodeHandlers = new ChipInstructionMicrocode[]
                     {
@@ -48,7 +48,7 @@ abstract class ChipInstructionMicrocodeDecoder
 
         private ChipInstructionMicrocode Class0Microcode = (lsb, msb, state) ->
         {
-            if (lsb ==0x00 && msb == (byte)0xEE)
+            if (lsb == 0x00 && msb == (byte)0xEE)
                 state.returnFromSubroutine();
             else if (lsb ==0x00 && msb == (byte)0xE0)
             {
@@ -144,6 +144,9 @@ abstract class ChipInstructionMicrocodeDecoder
                 int diff = (Byte.toUnsignedInt(x_value) - Byte.toUnsignedInt(y_value));
                 s.setRegister(X, (byte) (diff & 0xFF));
                 s.setRegister(0x0F, x_value < y_value ? (byte) 0 : (byte) 1);
+            }else
+            {
+                throw new RuntimeException(String.format("unknown instruction [%02X %02X]",lsb,msb));
             }
             s.setProgramCounter(s.getProgramCounter() + 2);
         };
@@ -190,14 +193,13 @@ abstract class ChipInstructionMicrocodeDecoder
             byte posX = state.getRegister(X);
             byte posY = state.getRegister(Y);
             //System.out.println(String.format("write %d (%d) @ (%d,%d)",numOfPatternBytes,N,posX,posY));
-            boolean matched = false;
+            boolean spriteCollisionDetected = false;
             for (int i=0;i<numOfPatternBytes;i++)
             {
                 byte patternByte = state.readMemory(state.getIndexRegister() + i);
-                matched |= state.writeVram(posX, (byte) ((posY + i) & 0xff),patternByte);
+                spriteCollisionDetected |= state.writeVram(posX, (byte) ((posY + i) & 0xff),patternByte);
             }
-            if (matched)
-                state.setRegister(0x0F, (byte) 1);
+            state.setRegister(0x0F, spriteCollisionDetected ? (byte) 1: (byte) 0);
             state.setProgramCounter(state.getProgramCounter() + 2);
         };
 
@@ -206,10 +208,11 @@ abstract class ChipInstructionMicrocodeDecoder
             if (msb != (byte)0x9E && msb != (byte)0xA1)
                 throw new RuntimeException(String.format("unknown instruction [%02X %02X]",lsb,msb));
 
+            // The original documentation is ambiguous on teh meaning of this opcode.
+            // other sources indicate that register X contains the key value
             int X = OpcodeUtil.nibbles(lsb)[1];
-            byte registerValue = state.getRegister(X);
-            byte key = state.getKey();
-            boolean conditionMatched = msb == (byte)0x9E ? registerValue == key : registerValue != key;
+            boolean isKeyPressed = state.isKeyPressed(state.getRegister(X) & 0x0F);
+            boolean conditionMatched = msb == (byte)0x9E ? isKeyPressed : !isKeyPressed;
             if (conditionMatched)
                 state.setProgramCounter(state.getProgramCounter() + 2);
             state.setProgramCounter(state.getProgramCounter() + 2);
