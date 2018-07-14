@@ -28,6 +28,8 @@ public class Chip8System
         void setTimer(byte value);
         void setTone(byte value);
         int getDisplayPatternAddress(int i);
+
+        void debug_displayVram();
     }
 
     private final static byte[] DIGIT_DISPLAY_PATTERNS = new byte[]{
@@ -269,12 +271,6 @@ public class Chip8System
                return false;
             }
 
-            // TODO:: I think I do not need it anymore
-            /* public byte getKey()
-            {
-                return keyboard.getKeyPressed();
-            }*/
-
             @Override
             public byte getTimer()
             {
@@ -304,6 +300,14 @@ public class Chip8System
             {
                 // this is a synthetic address beyond memory mapping
                 return DIGIT_DISPLAY_MAPPING[digit & 0x0F] | 0xDEAD0000;
+            }
+
+
+            @Override
+            public void debug_displayVram()
+            {
+                displayResisters();
+                displayVram();
             }
         };
     }
