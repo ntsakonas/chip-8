@@ -222,13 +222,15 @@ abstract class ChipInstructionMicrocodeDecoder
             int numOfPatternBytes = (Math.min(N,15));
             byte posX = state.getRegister(X);
             byte posY = state.getRegister(Y);
-            //System.out.println(String.format("write %d (%d) @ (%d,%d)",numOfPatternBytes,N,posX,posY));
+            System.out.println(String.format("write %d (%d) @ (%d,%d)",numOfPatternBytes,N,posX,posY));
             boolean spriteCollisionDetected = false;
             for (int i=0;i<numOfPatternBytes;i++)
             {
                 byte patternByte = state.readMemory(state.getIndexRegister() + i);
                 spriteCollisionDetected |= state.writeVram(posX, (byte) ((posY + i) & 0xff),patternByte);
             }
+            // debug method
+            //state.debug_displayVram();
             state.setRegister(0x0F, spriteCollisionDetected ? (byte) 1: (byte) 0);
             state.setProgramCounter(state.getProgramCounter() + 2);
         };
@@ -260,7 +262,7 @@ abstract class ChipInstructionMicrocodeDecoder
             else if (msb == 0x18)
                 state.setTone(state.getRegister(X));
             else if (msb == 0x1E)
-                state.setIndexRegister(state.getIndexRegister()+state.getRegister(X));
+                state.setIndexRegister(state.getIndexRegister()+Byte.toUnsignedInt(state.getRegister(X)));
             else if (msb == 0x29)
                 state.setIndexRegister(state.getDisplayPatternAddress(OpcodeUtil.nibbles(state.getRegister(X))[1]));
             else if (msb == 0x33)
