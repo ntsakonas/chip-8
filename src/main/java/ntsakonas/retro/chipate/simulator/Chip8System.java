@@ -67,7 +67,7 @@ public class Chip8System
         24, 30,  8, 4,  12, 0,  2           // 9..F
     };
 
-    private final int AVAILABLE_RAM = 2048;
+    private final int AVAILABLE_RAM = 4096;//2048;
     private final int RAM_PAGE_SIZE = 256;
     private final int VIDEO_RAM_SIZE = 256;
     private final int PROGRAM_START = 0x200;
@@ -115,7 +115,12 @@ public class Chip8System
     {
         final int numberOfRamPages = AVAILABLE_RAM / RAM_PAGE_SIZE;
         Arrays.fill(ram, (byte) 0);
-        videoRamBaseAddress = (numberOfRamPages - 1) * RAM_PAGE_SIZE;
+        // DEBUG: screen pixel addressing is 0-based (x=[0..63] y=[0..31]
+        // but some games use 1-based indexing thus going beyond the system memory
+        // since the program cannot access the memory directly, for safety and
+        // compatibility with those programs, an extra 16 bytes is allocated on
+        // top of the VRAM area.
+        videoRamBaseAddress = (numberOfRamPages - 1) * RAM_PAGE_SIZE - 16;
         registersBaseAddress = videoRamBaseAddress - 16;
         stackTop = (numberOfRamPages - 2) * RAM_PAGE_SIZE + 0xCF;
         stackPointer = stackTop;
@@ -212,6 +217,15 @@ public class Chip8System
             @Override
             public boolean writeVram(byte x, byte y, byte pattern)
             {
+                // DEBUG: screen pixel addressing is 0-based (x=[0..63] y=[0..31]
+                // but some games use 1-based indexing thus going beyond the system memory
+                // it is unknown how the original system would behave but in the simulator
+                // out of range values are ignored
+                // this has the risk of modifying the behaviour of the program
+                // if it relies on the collision
+                // instead of this fix, a small expansion of the VRAM is made (see relevant code)
+                //if (x < 0 || x > 63 || y < 0 || y > 31)
+                //    return false;
                 synchronized (videoRamLock)
                 {
                     final int SCREEN_WIDTH_PIXELS = 64;
