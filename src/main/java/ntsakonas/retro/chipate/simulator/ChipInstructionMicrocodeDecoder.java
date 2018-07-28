@@ -222,7 +222,7 @@ abstract class ChipInstructionMicrocodeDecoder
             int numOfPatternBytes = (Math.min(N,15));
             byte posX = state.getRegister(X);
             byte posY = state.getRegister(Y);
-            System.out.println(String.format("write %d (%d) @ (%d,%d)",numOfPatternBytes,N,posX,posY));
+            //System.out.println(String.format("write %d (%d) @ (%d,%d)",numOfPatternBytes,N,posX,posY));
             boolean spriteCollisionDetected = false;
             for (int i=0;i<numOfPatternBytes;i++)
             {
