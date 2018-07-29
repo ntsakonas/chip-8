@@ -1,6 +1,8 @@
 package ntsakonas.retro.chipate.debugger;
 
 import ntsakonas.retro.chipate.ConsoleInput;
+import ntsakonas.retro.chipate.instructions.ChipInstruction;
+import ntsakonas.retro.chipate.instructions.Instructions;
 import ntsakonas.retro.chipate.simulator.Chip8System;
 
 import java.util.Scanner;
@@ -19,10 +21,13 @@ public class CommandLineDebugger implements Chip8Debugger
         }
     }
 
-    private final int MAX_NUM_OF_PC_BREAKPOINTS = 4;
+    private final int MAX_NUM_OF_PC_BREAKPOINTS = 32;
+    private final int NUM_OF_INSTRUCTION_TO_DECOMPILE = 6;
     BreakPoint[] pcBreakpoints = new BreakPoint[MAX_NUM_OF_PC_BREAKPOINTS];
     int numOfPcBreakPoints = 0;
     boolean isSingleStepping = false;
+    Instructions.Parser instructionParser = Instructions.parser();
+
     @Override
     public boolean shouldTakeControl(Chip8System.SystemState systemState)
     {
@@ -51,7 +56,9 @@ public class CommandLineDebugger implements Chip8Debugger
 
     public void singleStep(Chip8System.SystemState systemState)
     {
-        System.out.println(String.format("BREAK at pc: %04X",systemState.getProgramCounter()));
+        System.out.println(String.format("BREAK at address %04X",systemState.getProgramCounter()));
+        //disassemble a few commands from current PC to create context
+        disassembleProgramAtAddress(systemState);
         Scanner inputScanner = ConsoleInput.getInput();
         boolean getMoreInput = true;
         while (getMoreInput)
@@ -59,7 +66,7 @@ public class CommandLineDebugger implements Chip8Debugger
             System.out.print("(PAUSED)>");
             try
             {
-                String command = inputScanner.nextLine();
+                String command = inputScanner.nextLine().toLowerCase();
                 boolean isBreakPoint = handleBreakpointCommands(command);
                 if (isBreakPoint)
                     continue;
@@ -70,7 +77,7 @@ public class CommandLineDebugger implements Chip8Debugger
                         getMoreInput = false;
                         break;
                     case "r":
-                        System.out.println("Resuming...");
+                        System.out.println("Resuming execution...");
                         isSingleStepping = false;
                         getMoreInput = false;
                         break;
@@ -80,6 +87,15 @@ public class CommandLineDebugger implements Chip8Debugger
                     case "vr":
                         displayVram(systemState);
                         break;
+                    case "":
+                        disassembleProgramAtAddress(systemState);
+                        break;
+                    case "cr":
+                        System.out.println("add change register commands 'cr 1 1F' or 'cr pc/sp/I 2F40'");
+                        break;
+                    case "cm":
+                        System.out.println("add change memory commands 'cm 0200 FB'");
+                        break;
                 }
             }catch (Throwable e)
             {
@@ -88,38 +104,48 @@ public class CommandLineDebugger implements Chip8Debugger
         }
     }
 
+    private void disassembleProgramAtAddress(Chip8System.SystemState systemState)
+    {
+        // disassemble the next 5 commands
+        int programCounter = systemState.getProgramCounter();
+        byte[] ram = systemState.getRam();
+        for (int i = 0; i < NUM_OF_INSTRUCTION_TO_DECOMPILE; i++)
+        {
+            ChipInstruction instruction = instructionParser.decode(programCounter, ram[programCounter], ram[programCounter + 1]);
+            System.out.println(String.format("  %04X  %S  %S",instruction.getAddress(),instruction.getOpcodes(),instruction.getMnemonic()));
+            programCounter += 2;
+        }
+    }
+
     // handles all breakpoints commands
-    // examples
-    // bpa 512
-    // bpa 0x200
-    // bpr 512
-    // bpr 0x200
+    // all addresses are in hex
+    // e.g
+    // "bpa200" or "bpa 200"
+    // "bpr 200"
+    // etc
     private boolean handleBreakpointCommands(String command)
     {
-        String cmd = command.toLowerCase();
-        boolean isListBP = cmd.startsWith("bpl");
-
+        boolean isListBP = command.startsWith("bpl");
         if (isListBP)
         {
             listBreakpoints();
             return true;
         }
-
-        boolean isAddBP = cmd.startsWith("bpa");
-        boolean isDeleteBP = cmd.startsWith("bpr");
-        boolean isEnableBP = cmd.startsWith("bpe");
-        boolean isDisableBP = cmd.startsWith("bpd");
+        boolean isAddBP = command.startsWith("bpa");
+        boolean isDeleteBP = command.startsWith("bpr");
+        boolean isEnableBP = command.startsWith("bpe");
+        boolean isDisableBP = command.startsWith("bpd");
         if (isAddBP || isDeleteBP || isEnableBP || isDisableBP)
         {
-            int programmLocation = extractBreakPointAddress(cmd);
+            int address = extractBreakPointAddress(command);
             if (isAddBP)
-                addNewBreakPointAt(programmLocation);
+                addNewBreakPointAt(address);
             if (isDeleteBP)
-                deleteBreakPointAt(programmLocation);
+                deleteBreakPointAt(address);
             if (isEnableBP)
-                enableBreakPointAt(programmLocation);
+                enableBreakPointAt(address);
             if (isDisableBP)
-                disableBreakPointAt(programmLocation);
+                disableBreakPointAt(address);
             return true;
         }
         return false;
@@ -195,9 +221,7 @@ public class CommandLineDebugger implements Chip8Debugger
 
     private int extractBreakPointAddress(String cmd)
     {
-        int radix = cmd.substring(4).startsWith("0x") ? 16 : 10;
-        String address = radix == 10 ? cmd.substring(4) : cmd.substring(6);
-        return Integer.valueOf(address, radix);
+        return Integer.valueOf(cmd.substring(3).trim(), 16);
     }
 
     public void displayRegisters(Chip8System.SystemState systemState)
@@ -230,7 +254,7 @@ public class CommandLineDebugger implements Chip8Debugger
 
     public void displayVram(Chip8System.SystemState systemState)
     {
-        //System.out.println("-----------------VRAM-----------------------");
+        System.out.println("---------------------------VRAM DUMP----------------------------");
         System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 
         byte[] videoRam = systemState.getVideoRam();
@@ -239,7 +263,6 @@ public class CommandLineDebugger implements Chip8Debugger
         {
             for (int x = 0; x < 8; x++)
             {
-                //int vramPattern = Byte.toUnsignedInt(ram[videoRamBaseAddress + 8 * y + x]);
                 int vramPattern = Byte.toUnsignedInt(videoRam[8 * y + x]);
                 int vramPatternMask = 0x80;
                 for (int pixel=0;pixel<8;pixel++)

@@ -30,6 +30,7 @@ public class Chip8System
         int getStackTop();
         byte[] getRam();
         byte[] getVideoRam();
+        int getProgramStartAddress();
     }
 
     private final static byte[] DIGIT_DISPLAY_PATTERNS = new byte[]{
@@ -330,6 +331,12 @@ public class Chip8System
             public byte[] getVideoRam()
             {
                 return  Arrays.copyOfRange(ram,videoRamBaseAddress,videoRamBaseAddress + 256);
+            }
+
+            @Override
+            public int getProgramStartAddress()
+            {
+                return PROGRAM_START;
             }
         };
     }
