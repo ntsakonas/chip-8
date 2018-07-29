@@ -95,12 +95,6 @@ public class Chip8System
             if (timerTick > 0)
                 --timerTick;
         }
-
-        /*
-        synchronized (videoRamLock)
-        {
-            systemDisplay.refresh(Arrays.copyOfRange(ram,videoRamBaseAddress,videoRamBaseAddress+VIDEO_RAM_SIZE));
-        }*/
     };
 
     public Chip8System(Keyboard keyboard,SystemDisplay systemDisplay)
@@ -229,7 +223,6 @@ public class Chip8System
                 synchronized (videoRamLock)
                 {
                     final int SCREEN_WIDTH_PIXELS = 64;
-                    final int SCREEN_HEIGHT_PIXELS = 32;
                     int vramOffsetForMSB = videoRamBaseAddress + (SCREEN_WIDTH_PIXELS * y + x) / 8;
                     int vramOffsetForLSB = vramOffsetForMSB + 1;
                     int patternShiftCount = x % 8;
@@ -315,7 +308,6 @@ public class Chip8System
                 // this is a synthetic address beyond memory mapping
                 return DIGIT_DISPLAY_MAPPING[digit & 0x0F] | 0xDEAD0000;
             }
-
 
             @Override
             public void debug_displayVram()
