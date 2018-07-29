@@ -7,8 +7,20 @@ import java.util.Scanner;
 
 public class CommandLineDebugger implements Chip8Debugger
 {
+    private static class BreakPoint
+    {
+        int address;
+        boolean enabled;
+
+        public BreakPoint(int address)
+        {
+            this.address = address;
+            this.enabled = true;
+        }
+    }
+
     private final int MAX_NUM_OF_PC_BREAKPOINTS = 4;
-    int[] pcBreakpoints = new int[MAX_NUM_OF_PC_BREAKPOINTS];
+    BreakPoint[] pcBreakpoints = new BreakPoint[MAX_NUM_OF_PC_BREAKPOINTS];
     int numOfPcBreakPoints = 0;
     boolean isSingleStepping = false;
     @Override
@@ -22,24 +34,21 @@ public class CommandLineDebugger implements Chip8Debugger
         if (numOfPcBreakPoints == 0)
             return false;
         int programCounter = systemState.getProgramCounter();
-        for (int bpAddpress:pcBreakpoints)
+        for (int i = 0; i< numOfPcBreakPoints;i++)
         {
-            if (programCounter == bpAddpress)
+            BreakPoint breakPoint = pcBreakpoints[i];
+            if (programCounter == breakPoint.address && breakPoint.enabled)
                 return true;
         }
         return false;
-        //return systemState.getProgramCounter() == 0x200;
     }
 
     @Override
     public void takeControl(Chip8System.SystemState systemState)
     {
         singleStep(systemState);
-       // displayRegisters(systemState);
     }
 
-    // Debugging helpers
-    // remove them and create a small debugger :-)
     public void singleStep(Chip8System.SystemState systemState)
     {
         System.out.println(String.format("BREAK at pc: %04X",systemState.getProgramCounter()));
@@ -47,27 +56,34 @@ public class CommandLineDebugger implements Chip8Debugger
         boolean getMoreInput = true;
         while (getMoreInput)
         {
-            System.out.print("(STOPPED)>");
-            String command = inputScanner.nextLine();
-            boolean isBreakPoint = handleBreakpointCommands(command);
-            if (isBreakPoint)
-                continue;
-            switch (command)
+            System.out.print("(PAUSED)>");
+            try
             {
-                case "s":
-                    isSingleStepping = true;
-                    getMoreInput = false;
-                    break;
-                case "r":
-                    isSingleStepping = false;
-                    getMoreInput = false;
-                    break;
-                case "sr":
-                    displayRegisters(systemState);
-                    break;
-                case "vr":
-                    displayVram(systemState);
-                    break;
+                String command = inputScanner.nextLine();
+                boolean isBreakPoint = handleBreakpointCommands(command);
+                if (isBreakPoint)
+                    continue;
+                switch (command)
+                {
+                    case "s":
+                        isSingleStepping = true;
+                        getMoreInput = false;
+                        break;
+                    case "r":
+                        System.out.println("Resuming...");
+                        isSingleStepping = false;
+                        getMoreInput = false;
+                        break;
+                    case "sr":
+                        displayRegisters(systemState);
+                        break;
+                    case "vr":
+                        displayVram(systemState);
+                        break;
+                }
+            }catch (Throwable e)
+            {
+                System.out.println("what??? I don't know that command.");
             }
         }
     }
@@ -100,9 +116,36 @@ public class CommandLineDebugger implements Chip8Debugger
                 addNewBreakPointAt(programmLocation);
             if (isDeleteBP)
                 deleteBreakPointAt(programmLocation);
+            if (isEnableBP)
+                enableBreakPointAt(programmLocation);
+            if (isDisableBP)
+                disableBreakPointAt(programmLocation);
             return true;
         }
         return false;
+    }
+
+    private void enableBreakPointAt(int address)
+    {
+        setBreakPointStatus(address,true);
+    }
+
+    private void disableBreakPointAt(int address)
+    {
+        setBreakPointStatus(address,false);
+    }
+
+    private void setBreakPointStatus(int address,boolean enabled)
+    {
+        for (int i=0; i<numOfPcBreakPoints;i++)
+        {
+            if (pcBreakpoints[i].address == address)
+            {
+                pcBreakpoints[i].enabled = enabled;
+                return;
+            }
+        }
+        System.out.println("Could not find this breakpoint.");
     }
 
     private void listBreakpoints()
@@ -113,38 +156,39 @@ public class CommandLineDebugger implements Chip8Debugger
             return;
         }
         System.out.println("Current breakpoints");
-        System.out.println("ADDR ENABLED");
+        System.out.println("ADDR STATUS");
         for (int i = 0; i < numOfPcBreakPoints; i++)
-            System.out.println(String.format("%04X %c",pcBreakpoints[i],'Y'));
+            System.out.println(String.format("%04X %S",pcBreakpoints[i].address
+                    ,pcBreakpoints[i].enabled ? "ENABLED":"DISABLED"));
     }
 
-    private void deleteBreakPointAt(int programLocation)
+    private void deleteBreakPointAt(int address)
     {
         for (int i=0; i<numOfPcBreakPoints;i++)
         {
-            if (pcBreakpoints[i] == programLocation)
+            if (pcBreakpoints[i].address == address)
             {
                // erase breakpoint by moving the last breakpoint in this location
                 numOfPcBreakPoints--;
                 pcBreakpoints[i] = pcBreakpoints[numOfPcBreakPoints];
-                pcBreakpoints[numOfPcBreakPoints] = 0;
+                pcBreakpoints[numOfPcBreakPoints] = null;
                 return;
             }
         }
         System.out.println("Could not find this breakpoint.");
     }
-    private void addNewBreakPointAt(int programLocation)
+    private void addNewBreakPointAt(int address)
     {
         for (int i=0; i<numOfPcBreakPoints;i++)
         {
-            if (pcBreakpoints[i] == programLocation)
+            if (pcBreakpoints[i].address == address)
             {
                 System.out.println("Breakpoint already set at this location.");
                 return;
             }
         }
         if (numOfPcBreakPoints < MAX_NUM_OF_PC_BREAKPOINTS)
-            pcBreakpoints[numOfPcBreakPoints++] = programLocation;
+            pcBreakpoints[numOfPcBreakPoints++] = new BreakPoint(address);
         else
             System.out.println("Cannot add more breakpoints.");
     }
@@ -152,8 +196,8 @@ public class CommandLineDebugger implements Chip8Debugger
     private int extractBreakPointAddress(String cmd)
     {
         int radix = cmd.substring(4).startsWith("0x") ? 16 : 10;
-        String location = radix == 10 ? cmd.substring(4) : cmd.substring(6);
-        return Integer.valueOf(location, radix);
+        String address = radix == 10 ? cmd.substring(4) : cmd.substring(6);
+        return Integer.valueOf(address, radix);
     }
 
     public void displayRegisters(Chip8System.SystemState systemState)
