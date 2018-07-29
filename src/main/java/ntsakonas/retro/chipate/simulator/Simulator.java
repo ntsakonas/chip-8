@@ -5,6 +5,9 @@ import ntsakonas.retro.chipate.SystemDisplay;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class Simulator
 {
@@ -26,7 +29,15 @@ public class Simulator
         chip8System.placeRomInMemory(romBytes);
         try
         {
-            startExecution();
+
+            // running the simulator on a different thread I can terminate the application
+            // but the screen drawing flashes a lot
+
+            ExecutorService rtcExecutor = Executors.newSingleThreadExecutor();//newScheduledThreadPool(1);
+            rtcExecutor.submit(() -> startExecution());
+
+            // running this in the main thread blocks the program from terminating
+            //startExecution();
         }catch (Exception e)
         {
             System.out.println(String.format("Error during execution at address %04X",chip8System.systemState().getProgramCounter()));
@@ -57,6 +68,28 @@ public class Simulator
             //dgbInstructionCounter = dgbInstructionCounter % 4;
             //if (dgbInstructionCounter == 0)
             //   chip8System.displayVram();
+
+            // the execution loop is blocking the main thread and the program cannot exit
+            sleep();
+        }
+    }
+
+    private void sleep()
+    {
+        // TODO:: I need to simulate the timing of the processor
+        // CDP1802 COSMAC board used a 1.7609Mhz clock,
+        // each CDP1802 machine cycle equals 8 clock cycles,
+        // each machine cycle is about 4.54 microSec in duration.
+        // it is no known how many instructions were executed per CHIP8 instruction
+        // but lets assume 10.. that means each CHIP8 instruction would last 45.4 microSec
+        // lets sleep for this time to emulate the original timing
+        try
+        {
+//            Thread.sleep(0L,45400);
+            Thread.sleep(1L);
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
         }
     }
 

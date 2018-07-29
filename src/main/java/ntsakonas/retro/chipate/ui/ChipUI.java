@@ -14,9 +14,20 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+class SharedVideoRam
+{
+    public byte[] videoRam;
+}
 
 public class ChipUI {
-
+    SharedVideoRam sharedVideoRam = new SharedVideoRam();
 
     SystemDisplay systemDisplay =  new SystemDisplay(){
 
@@ -26,7 +37,20 @@ public class ChipUI {
 
         }
     };
+
     SystemDisplay systemDisplay2 =  new SystemDisplay()
+    {
+        @Override
+        public void refresh(byte[] vram)
+        {
+            //synchronized (sharedVideoRam)
+            {
+                sharedVideoRam.videoRam = Arrays.copyOf(vram, vram.length);
+            }
+        }
+    };
+
+    SystemDisplay systemDisplay3 =  new SystemDisplay()
     {
         final int SCREEN_SIZE_X = 64;
         final int SCREEN_SIZE_Y = 32;
@@ -34,37 +58,37 @@ public class ChipUI {
         @Override
         public void refresh(byte[] vram)
         {
-//            System.out.println("---refresh---");
-            final int displaySizeX = SCREEN_SIZE_X * SCALE;
-            final int displaySizeY = SCREEN_SIZE_Y * SCALE;
-            final int displayYBias = 50;
-            BufferedImage vramImage = new BufferedImage(displaySizeX,displaySizeY+displayYBias,BufferedImage.TYPE_INT_RGB);
-            for (int y=0;y<SCREEN_SIZE_Y;y++)
-            {
-                for (int x=0;x<SCREEN_SIZE_X/8;x++)
+                final int displaySizeX = SCREEN_SIZE_X * SCALE;
+                final int displaySizeY = SCREEN_SIZE_Y * SCALE;
+                final int displayYBias = 50;
+                BufferedImage vramImage = new BufferedImage(displaySizeX, displaySizeY + displayYBias, BufferedImage.TYPE_INT_RGB);
+                for (int y = 0; y < SCREEN_SIZE_Y; y++)
                 {
-                   int videoByte = getVideoByte(vram, y, x);
-                   int mask = 0x80;
-                   for (int bits=0;bits<8;bits++)
-                   {
-                       boolean isBitOn = ((videoByte & mask) == mask);
-                       int ypos = y * SCALE + displayYBias;
-                       int xpos = (x * 8 + bits) * SCALE;
-                       if (SCALE == 1)
-                       {
-                           vramImage.setRGB(xpos, ypos, isBitOn ? 0xffffff : 0x000000);
-                       }else
-                       {
-                           for (int yRepeat = 0;yRepeat<SCALE;++yRepeat)
-                               for (int xRepeat = 0;xRepeat<SCALE;++xRepeat)
-                                   vramImage.setRGB(xpos+xRepeat, ypos+yRepeat, isBitOn ? 0xffffff : 0x000000);
-                       }
-                       mask >>= 1;
-                   }
-                }
+                    for (int x = 0; x < SCREEN_SIZE_X / 8; x++)
+                    {
+                        int videoByte = getVideoByte(vram, y, x);
+                        int mask = 0x80;
+                        for (int bits = 0; bits < 8; bits++)
+                        {
+                            boolean isBitOn = ((videoByte & mask) == mask);
+                            int ypos = y * SCALE + displayYBias;
+                            int xpos = (x * 8 + bits) * SCALE;
+                            if (SCALE == 1)
+                            {
+                                vramImage.setRGB(xpos, ypos, isBitOn ? 0xffffff : 0x000000);
+                            } else
+                            {
+                                for (int yRepeat = 0; yRepeat < SCALE; ++yRepeat)
+                                    for (int xRepeat = 0; xRepeat < SCALE; ++xRepeat)
+                                        vramImage.setRGB(xpos + xRepeat, ypos + yRepeat, isBitOn ? 0xffffff : 0x000000);
+                            }
+                            mask >>= 1;
+                        }
+                    }
             }
             display.getGraphics().drawImage(vramImage, 0, 0, null);
             display.updateUI();
+            //display.repaint();
 
         }
 
@@ -74,6 +98,11 @@ public class ChipUI {
         }
     };
 
+    private final int SIMULATOR_WINDOW_WIDTH = 400;
+    private final int SIMULATOR_WINDOW_HEIGHT = 380;
+    private final int SCREEN_WIDTH_PX = 64;
+    private final int SCREEN_HEIGHT_PX = 32;
+
     private JFrame topLevelFrame;
     private JPanel display;
     private static Simulator simulator;
@@ -81,14 +110,21 @@ public class ChipUI {
 
     public ChipUI()
     {
-        createAndShowGUI();
+        // NOTEA:
+       // createAndShowGUI();
     }
 
+    // used with the new display concept - multiple threads
     public SystemDisplay getSystemDisplay()
     {
         return systemDisplay2;
     }
-
+    /*
+    public SystemDisplay getSystemDisplay()
+    {
+        return systemDisplay3;
+    }
+    */
     /**
      * Create the GUI and show it.  For thread safety,
      * this method should be invoked from the
@@ -96,10 +132,14 @@ public class ChipUI {
      */
     private void createAndShowGUI() {
         //Create and set up the window.
+        //JFrame.setDefaultLookAndFeelDecorated(true);
         topLevelFrame = new JFrame("Chip-8 Emulator");
+        topLevelFrame.setResizable(false);
         topLevelFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        topLevelFrame.setBackground(new Color(100, 213, 50));
-        topLevelFrame.setPreferredSize(new Dimension(400, 380));
+        topLevelFrame.setBackground(new Color(128, 128, 128));
+        topLevelFrame.setPreferredSize(new Dimension(SIMULATOR_WINDOW_WIDTH, SIMULATOR_WINDOW_HEIGHT));
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        topLevelFrame.setLocation(screenSize.width / 2 - SIMULATOR_WINDOW_WIDTH / 2, screenSize.height / 2 - SIMULATOR_WINDOW_HEIGHT /2 );
 
         /*
         JMenuBar menuBar = new JMenuBar();
@@ -115,17 +155,31 @@ public class ChipUI {
         yellowLabel.setPreferredSize(new Dimension(600, 600));
         */
 
-        display = new JPanel(false);
-        display.setPreferredSize(new Dimension(64, 32));
+        /*
+        display = new JPanel(true);
+        display.setPreferredSize(new Dimension(SCREEN_WIDTH_PX, SCREEN_HEIGHT_PX));
         display.setBackground(new Color(0, 0, 0));
-
+        display.setLocation(SIMULATOR_WINDOW_WIDTH / 2 - SCREEN_WIDTH_PX / 2, 0);
 
         //Set the menu bar and add the label to the content pane.
         //topLevelFrame.setJMenuBar(menuBar);
         topLevelFrame.getContentPane().add(display, BorderLayout.CENTER);
+        */
 
-        //frame.getContentPane().add(yellowLabel, BorderLayout.CENTER);
-        //Display the window.
+
+        // this need the display3 logic
+        /*
+        display = new JPanel(true);
+        display.setPreferredSize(new Dimension(SCREEN_WIDTH_PX * 3, SCREEN_HEIGHT_PX *3));
+        display.setBackground(new Color(0, 0, 0));
+        display.setLocation(SIMULATOR_WINDOW_WIDTH / 2 - SCREEN_WIDTH_PX / 2, 0);
+
+        topLevelFrame.getContentPane().add(display, BorderLayout.CENTER);
+        */
+
+        // this need the display2 logic
+        topLevelFrame.getContentPane().add(new SimulatorDisplay(sharedVideoRam), BorderLayout.CENTER);
+
         topLevelFrame.addKeyListener(new KeyListener()
         {
             @Override
@@ -147,8 +201,7 @@ public class ChipUI {
             }
         });
 
-        //topLevelFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        topLevelFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        topLevelFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         topLevelFrame.addWindowListener(new WindowAdapter()
         {
             @Override
@@ -157,20 +210,31 @@ public class ChipUI {
                 simulator.terminate();
                 topLevelFrame.dispose();
                 System.out.println("exit");
+                System.exit(0);
 
             }
         });
         topLevelFrame.pack();
         topLevelFrame.setVisible(true);
-
-        //read.setRGB();
     }
 
-    //Schedule a job for the event-dispatching thread:
-    //creating and showing this application's GUI.
+
+
+    public  void startSimulatorUI(String romPath) throws IOException
+    {
+        final byte[] romBytes = Files.readAllBytes(Paths.get(romPath));
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            //ChipUI chipUI = new ChipUI();
+            //simulator = new Simulator(new Keyboard(),chipUI.getSystemDisplay());
+            //NOTEA
+            createAndShowGUI();
+            simulator = new Simulator(new Keyboard(),getSystemDisplay());
+            simulator.run(romBytes);
+        });
+    }
+
     public static void main(String[] args) throws IOException
     {
-
         if (args.length == 0)
         {
             System.out.println("--- Chip-8 simulator by Nick Tsakonas (c) 2018");
@@ -178,14 +242,101 @@ public class ChipUI {
             System.out.println("          input.rom  - the rom to execute (located at 0x0200)");
             return;
         }
-        final byte[] romBytes = Files.readAllBytes(Paths.get(args[0]));
+        ChipUI ui = new ChipUI();
+        ui.startSimulatorUI(args[0]);
+        //startSimulatorUI(args[0]);
+    }
 
-        javax.swing.SwingUtilities.invokeLater(() -> {
-            ChipUI chipUI = new ChipUI();
-            simulator = new Simulator(new Keyboard(),chipUI.getSystemDisplay());
-            simulator.run(romBytes);
-        });
-//        javax.swing.SwingUtilities.invokeLater(() -> createAndShowGUI(new File("/home/ntsakonas/Data/Projects/intelij/chip-8/image.jpg")));
+}
+
+class SimulatorDisplay extends  JPanel
+{
+    private final int SCREEN_WIDTH_PX = 64;
+    private final int SCREEN_HEIGHT_PX = 32;
+    final int SCREEN_SIZE_X = 64;
+    final int SCREEN_SIZE_Y = 32;
+    final int SCALE = 5;
+    final int displaySizeX = SCREEN_SIZE_X * SCALE;
+    final int displaySizeY = SCREEN_SIZE_Y * SCALE;
+    final int displayYBias = 0;//50;
+
+    private final SharedVideoRam sharedVideoRam;
+    private BufferedImage vramImage;
+
+    public SimulatorDisplay(SharedVideoRam sharedVideoRam)
+    {
+        this.sharedVideoRam = sharedVideoRam;
+        setupDisplay();
+    }
+
+    private void setupDisplay()
+    {
+        setPreferredSize(new Dimension(SCREEN_WIDTH_PX, SCREEN_HEIGHT_PX));
+        setBackground(new Color(0, 0, 0));
+        vramImage = new BufferedImage(displaySizeX, displaySizeY + displayYBias, BufferedImage.TYPE_INT_RGB);
+
+        startScreenUpdate();
+    }
+
+    @Override
+    protected void paintComponent(Graphics g)
+    {
+        //super.paintComponent(g);
+        g.drawImage(vramImage, 0, 0, this);
+        Toolkit.getDefaultToolkit().sync();
+    }
+
+    private void startScreenUpdate()
+    {
+        ScheduledExecutorService rtcExecutor =Executors.newScheduledThreadPool(1);
+        rtcExecutor.scheduleAtFixedRate(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                //synchronized (sharedVideoRam)
+                {
+                    if (sharedVideoRam.videoRam != null && sharedVideoRam.videoRam.length>0)
+                        refresh(sharedVideoRam.videoRam);
+                }
+            }
+
+            public void refresh(byte[] vram)
+            {
+                for (int y = 0; y < SCREEN_SIZE_Y; y++)
+                {
+                    for (int x = 0; x < SCREEN_SIZE_X / 8; x++)
+                    {
+                        int videoByte = getVideoByte(vram, y, x);
+                        int mask = 0x80;
+                        for (int bits = 0; bits < 8; bits++)
+                        {
+                            boolean isBitOn = ((videoByte & mask) == mask);
+                            int ypos = y * SCALE + displayYBias;
+                            int xpos = (x * 8 + bits) * SCALE;
+                            if (SCALE == 1)
+                            {
+                                vramImage.setRGB(xpos, ypos, isBitOn ? 0xffffff : 0x000000);
+                            } else
+                            {
+                                for (int yRepeat = 0; yRepeat < SCALE; ++yRepeat)
+                                    for (int xRepeat = 0; xRepeat < SCALE; ++xRepeat)
+                                        vramImage.setRGB(xpos + xRepeat, ypos + yRepeat, isBitOn ? 0xffffff : 0x000000);
+                            }
+                            mask >>= 1;
+                        }
+                    }
+                }
+                repaint();
+            }
+            private int getVideoByte(byte[] vram, int y, int x)
+            {
+                return Byte.toUnsignedInt(vram[y * 8 + x]);
+            }
+
+
+        }, 0L, 2L, TimeUnit.MILLISECONDS);
+
     }
 
 }
