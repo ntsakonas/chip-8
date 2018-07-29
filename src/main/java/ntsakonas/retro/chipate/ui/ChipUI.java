@@ -1,6 +1,7 @@
 package ntsakonas.retro.chipate.ui;
 
 import ntsakonas.retro.chipate.SystemDisplay;
+import ntsakonas.retro.chipate.debugger.CommandLineDebugger;
 import ntsakonas.retro.chipate.simulator.Keyboard;
 import ntsakonas.retro.chipate.simulator.Simulator;
 
@@ -118,6 +119,8 @@ public class ChipUI {
         javax.swing.SwingUtilities.invokeLater(() -> {
             createAndShowGUI();
             simulator = new Simulator(new Keyboard(),getSystemDisplay());
+            // TESTING THE DEBUGGER
+            simulator.attachDebugger(new CommandLineDebugger());
             simulator.run(romBytes);
         });
     }

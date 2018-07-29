@@ -1,6 +1,7 @@
 package ntsakonas.retro.chipate.simulator;
 
 import ntsakonas.retro.chipate.SystemDisplay;
+import ntsakonas.retro.chipate.debugger.Chip8Debugger;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -12,6 +13,8 @@ public class Simulator
     private ChipInstructionExecutor executor;
     private boolean terminated;
     private ExecutorService programExecutionThread;
+    private boolean debuggerIsAttached;
+    private Chip8Debugger debugger;
 
     public Simulator(Keyboard keyboard,SystemDisplay systemDisplay)
     {
@@ -30,7 +33,7 @@ public class Simulator
             programExecutionThread.submit(() -> startExecution());
         }catch (Exception e)
         {
-            System.out.println(String.format("Error during execution at address %04X",chip8System.systemState().getProgramCounter()));
+            System.out.println(String.format("Error during execution at address %04X",chip8System.getSystemState().getProgramCounter()));
             e.printStackTrace();
         }
     }
@@ -42,6 +45,18 @@ public class Simulator
         chip8System.shutdown();
     }
 
+    public void attachDebugger(Chip8Debugger debugger)
+    {
+        debuggerIsAttached = true;
+        this.debugger = debugger;
+    }
+
+    public void detachDebugger()
+    {
+        debuggerIsAttached = false;
+        this.debugger = null;
+    }
+
     private void startExecution()
     {
         int programCounter = chip8System.getProgramCounter();
@@ -49,12 +64,18 @@ public class Simulator
         terminated = false;
         while (!terminated)
         {
-            byte instructionLsb = chip8System.systemState().readMemory(programCounter);
-            byte instructionMsb = chip8System.systemState().readMemory(programCounter + 1);
+            if (debuggerIsAttached)
+            {
+                if (debugger.shouldTakeControl(chip8System.getSystemState()))
+                    debugger.takeControl(chip8System.getSystemState());
+            }
+            byte instructionLsb = chip8System.getSystemState().readMemory(programCounter);
+            byte instructionMsb = chip8System.getSystemState().readMemory(programCounter + 1);
 
             ChipInstructionMicrocode microCode = decoder.decode(instructionLsb, instructionMsb);
-            executor.executeCode(microCode, instructionLsb, instructionMsb,chip8System.systemState());
+            executor.executeCode(microCode, instructionLsb, instructionMsb,chip8System.getSystemState());
             programCounter = chip8System.getProgramCounter();
+
             //chip8System.singleStep();
             //dgbInstructionCounter = dgbInstructionCounter % 4;
             //if (dgbInstructionCounter == 0)

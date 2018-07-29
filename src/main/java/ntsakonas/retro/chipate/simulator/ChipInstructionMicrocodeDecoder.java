@@ -229,8 +229,6 @@ abstract class ChipInstructionMicrocodeDecoder
                 byte patternByte = state.readMemory(state.getIndexRegister() + i);
                 spriteCollisionDetected |= state.writeVram(posX, (byte) ((posY + i) & 0xff),patternByte);
             }
-            // debug method
-            //state.debug_displayVram();
             state.setRegister(0x0F, spriteCollisionDetected ? (byte) 1: (byte) 0);
             state.setProgramCounter(state.getProgramCounter() + 2);
         };

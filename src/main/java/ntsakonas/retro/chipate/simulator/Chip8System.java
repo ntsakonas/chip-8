@@ -1,10 +1,8 @@
 package ntsakonas.retro.chipate.simulator;
 
-import ntsakonas.retro.chipate.ConsoleInput;
 import ntsakonas.retro.chipate.SystemDisplay;
 
 import java.util.Arrays;
-import java.util.Scanner;
 
 public class Chip8System
 {
@@ -28,8 +26,10 @@ public class Chip8System
         void setTimer(byte value);
         void setTone(byte value);
         int getDisplayPatternAddress(int i);
-
-        void debug_displayVram();
+        int getStackPointer();
+        int getStackTop();
+        byte[] getRam();
+        byte[] getVideoRam();
     }
 
     private final static byte[] DIGIT_DISPLAY_PATTERNS = new byte[]{
@@ -207,7 +207,6 @@ public class Chip8System
                 return indexRegister;
             }
 
-
             @Override
             public boolean writeVram(byte x, byte y, byte pattern)
             {
@@ -310,10 +309,27 @@ public class Chip8System
             }
 
             @Override
-            public void debug_displayVram()
+            public int getStackPointer()
             {
-                displayResisters();
-                displayVram();
+                return stackPointer;
+            }
+
+            @Override
+            public int getStackTop()
+            {
+                return stackTop;
+            }
+
+            @Override
+            public byte[] getRam()
+            {
+                return ram;
+            }
+
+            @Override
+            public byte[] getVideoRam()
+            {
+                return  Arrays.copyOfRange(ram,videoRamBaseAddress,videoRamBaseAddress + 256);
             }
         };
     }
@@ -329,7 +345,7 @@ public class Chip8System
         return programCounter;
     }
 
-    public SystemState systemState()
+    public SystemState getSystemState()
     {
         return systemState;
     }
@@ -344,83 +360,4 @@ public class Chip8System
         systemDisplay.refresh(Arrays.copyOfRange(ram,videoRamBaseAddress,videoRamBaseAddress+VIDEO_RAM_SIZE));
     }
 
-    // Debugging helpers
-    // remove them and create a small debugger :-)
-    public void singleStep()
-    {
-        Scanner inputScanner = ConsoleInput.getInput();
-        boolean getMoreInput = true;
-        while (getMoreInput)
-        {
-            System.out.print("(BREAK)>");
-            String command = inputScanner.nextLine();
-            switch (command)
-            {
-                case "s":
-                    getMoreInput = false;
-                    break;
-                case "r":
-                    displayResisters();
-                    break;
-                case "vr":
-                    displayVram();
-                    break;
-            }
-        }
-    }
-
-
-    public void displayResisters()
-    {
-        System.out.println("Chip-8 status:");
-        System.out.println(String.format("pc: %04X   sp:%04X   I:%04X",programCounter,stackPointer,indexRegister));
-        for (int i=0;i<4;i++)
-        {
-            System.out.println(String.format("V%02d = %02X   V%02d = %02X   V%02d = %02X   V%02d = %02X",
-                    i*4,systemState.getRegister(i*4),
-                    i*4+1,systemState.getRegister(i*4+1),
-                    i*4+2,systemState.getRegister(i*4+2),
-                    i*4+3,systemState.getRegister(i*4+3)));
-
-        }
-        System.out.println();
-        System.out.println(String.format("Stack (HH -----> LL) stack top:%04x", stackTop));
-        StringBuilder stackDump = new StringBuilder();
-        for (int i=0;i<48;i++)
-        {
-            if (i % 8 == 0)
-                stackDump.append("\n");
-            stackDump.append(String.format("%02X", ram[stackTop - i])).append(" ");
-        }
-        System.out.println(stackDump.toString());
-        System.out.println("---------------------------------------------");
-    }
-
-    public void displayVram()
-    {
-        //System.out.println("-----------------VRAM-----------------------");
-        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-
-        StringBuilder lineBuffer = new StringBuilder();
-        for (int y =0;y<32;y++)
-        {
-            for (int x = 0; x < 8; x++)
-            {
-                int vramPattern = Byte.toUnsignedInt(ram[videoRamBaseAddress + 8 * y + x]);
-                int vramPatternMask = 0x80;
-                for (int pixel=0;pixel<8;pixel++)
-                {
-                    if ((vramPattern & vramPatternMask) == vramPatternMask)
-                        lineBuffer.append("*");
-                    else
-                        lineBuffer.append(".");
-                    vramPatternMask >>=1;
-                }
-            }
-            System.out.println(lineBuffer.toString());
-            lineBuffer.setLength(0);
-        }
-        System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-
-    }
 }
