@@ -6,6 +6,12 @@ import java.util.Arrays;
 
 public class Chip8System
 {
+    public interface SystemStateObserver
+    {
+        void observe(SystemState systemState);
+        void active(boolean isActive);
+    }
+
     public interface SystemState
     {
         byte getRegister(int registerNumber);
@@ -269,13 +275,19 @@ public class Chip8System
             @Override
             public byte waitForKey()
             {
+                // TODO:: in order to implement getKey() in a blocking fashion
+                // I need a synchronised queue and wait until the UI adds a key press
+                // in the list
                 return 0;
             }
 
             @Override
             public boolean isKeyPressed(int keyCode)
             {
-               return false;
+                // TODO:: in order for this to work it means that the keyboard needs to have a
+                // key buffer (as a queue) and either block on that or peek without waiting
+                // for this function.
+                return false;
             }
 
             @Override
@@ -299,6 +311,8 @@ public class Chip8System
             @Override
             public void setTone(byte value)
             {
+                // check specs how tone is supposed to work
+                // check the existing emulator how it does it
                 // todo :9mplement tone
             }
 

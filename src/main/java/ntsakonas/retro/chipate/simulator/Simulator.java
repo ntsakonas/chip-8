@@ -13,8 +13,10 @@ public class Simulator
     private ChipInstructionExecutor executor;
     private boolean terminated;
     private ExecutorService programExecutionThread;
-    private boolean debuggerIsAttached;
-    private Chip8Debugger debugger;
+    // I will probably need more than one observers soon
+    // to implement various ideas...let's start with only the debugger
+    // and I will extend it soon
+    private Chip8System.SystemStateObserver debugger;
 
     public Simulator(Keyboard keyboard,SystemDisplay systemDisplay)
     {
@@ -45,41 +47,31 @@ public class Simulator
         chip8System.shutdown();
     }
 
-    public void attachDebugger(Chip8Debugger debugger)
+    public void attachDebugger(Chip8System.SystemStateObserver debugger)
     {
-        debuggerIsAttached = true;
         this.debugger = debugger;
+        debugger.active(true);
     }
 
     public void detachDebugger()
     {
-        debuggerIsAttached = false;
+        debugger.active(false);
         this.debugger = null;
     }
 
     private void startExecution()
     {
         int programCounter = chip8System.getProgramCounter();
-        int dgbInstructionCounter = 0;
         terminated = false;
         while (!terminated)
         {
-            if (debuggerIsAttached)
-            {
-                if (debugger.shouldTakeControl(chip8System.getSystemState()))
-                    debugger.takeControl(chip8System.getSystemState());
-            }
+            debugger.observe(chip8System.getSystemState());
             byte instructionLsb = chip8System.getSystemState().readMemory(programCounter);
             byte instructionMsb = chip8System.getSystemState().readMemory(programCounter + 1);
 
             ChipInstructionMicrocode microCode = decoder.decode(instructionLsb, instructionMsb);
             executor.executeCode(microCode, instructionLsb, instructionMsb,chip8System.getSystemState());
             programCounter = chip8System.getProgramCounter();
-
-            //chip8System.singleStep();
-            //dgbInstructionCounter = dgbInstructionCounter % 4;
-            //if (dgbInstructionCounter == 0)
-            //   chip8System.displayVram();
             simulateRealSystemTiming();
         }
     }
