@@ -1,16 +1,13 @@
 package ntsakonas.retro.chipate.ui;
 
 import ntsakonas.retro.chipate.SystemDisplay;
-import ntsakonas.retro.chipate.debugger.CommandLineDebugger;
 import ntsakonas.retro.chipate.simulator.Keyboard;
+import ntsakonas.retro.chipate.simulator.KeyboardInput;
 import ntsakonas.retro.chipate.simulator.Simulator;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -63,27 +60,6 @@ public class ChipUI {
 
         //topLevelFrame.getContentPane().add(new SimulatorDisplay(sharedVideoRam), BorderLayout.CENTER);
         topLevelFrame.add(new SimulatorDisplay(sharedVideoRam), BorderLayout.CENTER);
-        topLevelFrame.addKeyListener(new KeyListener()
-        {
-            @Override
-            public void keyTyped(KeyEvent keyEvent)
-            {
-                System.out.println("key typed:"+keyEvent.getKeyChar());
-            }
-
-            @Override
-            public void keyPressed(KeyEvent keyEvent)
-            {
-                System.out.println("key pressed:"+keyEvent.getKeyChar());
-            }
-
-            @Override
-            public void keyReleased(KeyEvent keyEvent)
-            {
-                System.out.println("key released:"+keyEvent.getKeyChar());
-            }
-        });
-
         topLevelFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         topLevelFrame.addWindowListener(new WindowAdapter()
         {
@@ -108,10 +84,32 @@ public class ChipUI {
         final byte[] romBytes = Files.readAllBytes(Paths.get(romPath));
         javax.swing.SwingUtilities.invokeLater(() -> {
             createAndShowGUI();
-            simulator = new Simulator(new Keyboard(),getSystemDisplay());
+            Keyboard keyboard = new Keyboard();
+            connectKeyboard(keyboard);
+            simulator = new Simulator(keyboard,getSystemDisplay());
             // TESTING THE DEBUGGER
             //simulator.attachDebugger(new CommandLineDebugger());
             simulator.run(romBytes);
+        });
+    }
+
+    private void connectKeyboard(KeyboardInput keyboardInput)
+    {
+        topLevelFrame.addKeyListener(new KeyAdapter()
+        {
+            @Override
+            public void keyPressed(KeyEvent keyEvent)
+            {
+                //System.out.println("key pressed:"+keyEvent.getKeyChar());
+                keyboardInput.keyPressed(keyEvent.getKeyChar());
+            }
+
+            @Override
+            public void keyReleased(KeyEvent keyEvent)
+            {
+                //System.out.println("key released:"+keyEvent.getKeyChar());
+                keyboardInput.keyReleased(keyEvent.getKeyChar());
+            }
         });
     }
 

@@ -88,7 +88,7 @@ public class Chip8System
     private int highestProgramMemoryAddress;
     private int timerTick;
     private RealTimeClock rtc;
-    private Keyboard keyboard;
+    private KeyboardQueue keyboard;
     private SystemState systemState;
     private SystemDisplay systemDisplay;
     private Object videoRamLock = new Object();
@@ -104,7 +104,7 @@ public class Chip8System
         }
     };
 
-    public Chip8System(Keyboard keyboard,SystemDisplay systemDisplay)
+    public Chip8System(KeyboardQueue keyboard,SystemDisplay systemDisplay)
     {
         this.keyboard = keyboard;
         this.systemDisplay = systemDisplay;
@@ -275,19 +275,18 @@ public class Chip8System
             @Override
             public byte waitForKey()
             {
-                // TODO:: in order to implement getKey() in a blocking fashion
-                // I need a synchronised queue and wait until the UI adds a key press
-                // in the list
-                return 0;
+                // NOTE:: this is a blocking method.
+                // it will return when a key is pressed and then released
+                System.out.println("waiting for key...");
+                byte b = keyboard.waitForKey();
+                System.out.println("key "+b+" pressed...");
+                return b;
             }
 
             @Override
             public boolean isKeyPressed(int keyCode)
             {
-                // TODO:: in order for this to work it means that the keyboard needs to have a
-                // key buffer (as a queue) and either block on that or peek without waiting
-                // for this function.
-                return false;
+                return keyboard.isKeyPressed(keyCode);
             }
 
             @Override
