@@ -28,17 +28,7 @@ class SharedVideoRam
 public class ChipUI {
     SharedVideoRam sharedVideoRam = new SharedVideoRam();
 
-    SystemDisplay systemDisplay =  new SystemDisplay()
-    {
-        @Override
-        public void refresh(byte[] vram)
-        {
-            //synchronized (sharedVideoRam)
-            {
-                sharedVideoRam.videoRam = Arrays.copyOf(vram, vram.length);
-            }
-        }
-    };
+    SystemDisplay systemDisplay = vram -> sharedVideoRam.videoRam = Arrays.copyOf(vram, vram.length);
 
     private final int SIMULATOR_WINDOW_WIDTH = 400;
     private final int SIMULATOR_WINDOW_HEIGHT = 380;

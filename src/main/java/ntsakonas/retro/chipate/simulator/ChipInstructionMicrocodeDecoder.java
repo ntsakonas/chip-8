@@ -50,7 +50,7 @@ abstract class ChipInstructionMicrocodeDecoder
         {
             if (lsb == 0x00 && msb == (byte)0xEE)
                 state.returnFromSubroutine();
-            else if (lsb ==0x00 && msb == (byte)0xE0)
+            else if (lsb == 0x00 && msb == (byte)0xE0)
             {
                 state.eraseDisplay();
                 state.setProgramCounter(state.getProgramCounter() + 2);

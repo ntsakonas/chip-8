@@ -27,8 +27,31 @@ public class Instructions
 
         OriginalChip8SetParser()
         {
-            initHanlders();
+            initHandlers();
         }
+
+        private void initHandlers()
+        {
+            instructionHandlers = new Handler[]{
+                    class00handler,
+                    class01handler,
+                    class02handler,
+                    class03handler,
+                    class04handler,
+                    class05handler,
+                    class06handler,
+                    class07handler,
+                    class08handler,
+                    class09handler,
+                    class0Ahandler,
+                    class0Bhandler,
+                    class0Chandler,
+                    class0Dhandler,
+                    class0Ehandler,
+                    class0Fhandler,
+            };
+        }
+
 
         Handler class00handler = (address, lsb, msb) ->
         {
@@ -77,28 +100,6 @@ public class Instructions
             else
                 return null;
         };
-
-        private void initHanlders()
-        {
-            instructionHandlers = new Handler[]{
-                    class00handler,
-                    class01handler,
-                    class02handler,
-                    class03handler,
-                    class04handler,
-                    class05handler,
-                    class06handler,
-                    class07handler,
-                    class08handler,
-                    class09handler,
-                    class0Ahandler,
-                    class0Bhandler,
-                    class0Chandler,
-                    class0Dhandler,
-                    class0Ehandler,
-                    class0Fhandler,
-            };
-        }
 
         public ChipInstruction decode(int address, byte lsb, byte msb)
         {

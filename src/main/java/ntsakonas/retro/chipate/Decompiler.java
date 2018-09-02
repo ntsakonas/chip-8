@@ -12,9 +12,6 @@ public class Decompiler
     void decompile(byte[] romBytes, AsmPrinter printer)
     {
         int romSize = romBytes.length/2;
-        //if (romSize * 2 != romBytes.length)
-        //    throw new IllegalArgumentException("It looks like the rom is missing some bytes..?");
-
         Instructions.Parser instructionParser = Instructions.parser();
         // all Chip-8 programs start from location 0x200 (512d)
         final int baseAddress = 0x200;
