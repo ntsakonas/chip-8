@@ -110,7 +110,7 @@ public class ChipUI {
             createAndShowGUI();
             simulator = new Simulator(new Keyboard(),getSystemDisplay());
             // TESTING THE DEBUGGER
-            simulator.attachDebugger(new CommandLineDebugger());
+            //simulator.attachDebugger(new CommandLineDebugger());
             simulator.run(romBytes);
         });
     }

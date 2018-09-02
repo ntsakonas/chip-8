@@ -65,7 +65,8 @@ public class Simulator
         terminated = false;
         while (!terminated)
         {
-            debugger.observe(chip8System.getSystemState());
+            if (debugger != null)
+               debugger.observe(chip8System.getSystemState());
             byte instructionLsb = chip8System.getSystemState().readMemory(programCounter);
             byte instructionMsb = chip8System.getSystemState().readMemory(programCounter + 1);
 
