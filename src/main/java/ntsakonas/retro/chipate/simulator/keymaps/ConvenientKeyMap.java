@@ -8,16 +8,16 @@ public class ConvenientKeyMap implements KeyboardMapping {
     Map<Character, Integer> keymap = new HashMap<>();
 
     public ConvenientKeyMap() {
-        keymap.put('0', 0); // key A
-        keymap.put('1', 1); // key A
-        keymap.put('2', 2); // key A
-        keymap.put('3', 3); // key A
-        keymap.put('4', 4); // key A
-        keymap.put('5', 5); // key A
-        keymap.put('6', 6); // key A
-        keymap.put('7', 7); // key A
-        keymap.put('8', 8); // key A
-        keymap.put('9', 9); // key A
+        keymap.put('0', 0); // key 0
+        keymap.put('1', 1); // key 1
+        keymap.put('2', 2); // key 2
+        keymap.put('3', 3); // key 3
+        keymap.put('4', 4); // key 4
+        keymap.put('5', 5); // key 5
+        keymap.put('6', 6); // key 6
+        keymap.put('7', 7); // key 7
+        keymap.put('8', 8); // key 8
+        keymap.put('9', 9); // key 9
         keymap.put('a', 10); // key A
         keymap.put('s', 11); // key B
         keymap.put('d', 12); // key C
