@@ -13,21 +13,6 @@ public class ConsoleInput implements SystemInput {
         return inputScanner;
     }
 
-    /*
-    public synchronized byte getKeyPressed()
-    {
-        if (getInput().hasNext())
-        {
-            System.out.println("K="+getInput().nextInt());
-        }
-        return 0;
-    }
-
-    public byte waitForKey()
-    {
-        return 0;
-    }
-   */
     @Override
     public char getKey() {
         return 0;
