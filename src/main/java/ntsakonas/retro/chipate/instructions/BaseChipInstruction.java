@@ -1,14 +1,13 @@
 package ntsakonas.retro.chipate.instructions;
 
-public class BaseChipInstruction implements ChipInstruction
-{
+public class BaseChipInstruction implements ChipInstruction {
+
     protected int address;
     protected byte lsb;
     protected byte msb;
     protected String mnemonic;
 
-    public BaseChipInstruction(int address, byte lsb, byte msb,String mnemonic)
-    {
+    public BaseChipInstruction(int address, byte lsb, byte msb, String mnemonic) {
         this.address = address;
         this.lsb = lsb;
         this.msb = msb;
@@ -16,20 +15,17 @@ public class BaseChipInstruction implements ChipInstruction
     }
 
     @Override
-    public String getMnemonic()
-    {
+    public String getMnemonic() {
         return mnemonic;
     }
 
     @Override
-    public int getAddress()
-    {
+    public int getAddress() {
         return address;
     }
 
     @Override
-    public String getOpcodes()
-    {
-        return String.format("%02x%02X",lsb,msb);
+    public String getOpcodes() {
+        return String.format("%02x%02X", lsb, msb);
     }
 }

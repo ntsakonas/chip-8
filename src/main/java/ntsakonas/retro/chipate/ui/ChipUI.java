@@ -21,10 +21,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 class SharedVideoRam {
+
     public byte[] videoRam;
 }
 
 public class ChipUI {
+
     SharedVideoRam sharedVideoRam = new SharedVideoRam();
 
     SystemDisplay systemDisplay = vram -> sharedVideoRam.videoRam = Arrays.copyOf(vram, vram.length);
@@ -115,6 +117,7 @@ public class ChipUI {
 }
 
 class SimulatorDisplay extends JPanel {
+
     private final int SCREEN_WIDTH_PX = 64;
     private final int SCREEN_HEIGHT_PX = 32;
     final int SCALE = 5;

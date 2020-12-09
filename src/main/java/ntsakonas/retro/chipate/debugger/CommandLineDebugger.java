@@ -8,34 +8,30 @@ import ntsakonas.retro.chipate.simulator.Chip8System;
 
 import java.util.Scanner;
 
-public class CommandLineDebugger implements Chip8Debugger,Chip8Debugger.DebuggerState
-{
+public class CommandLineDebugger implements Chip8Debugger, Chip8Debugger.DebuggerState {
+
     private final int NUM_OF_INSTRUCTION_TO_DECOMPILE = 6;
     Instructions.Parser instructionParser = Instructions.parser();
     boolean shouldTakeControl = false;
     boolean isDebuggerAttached = false;
     DebugBreakpoints breakpoints;
 
-    public CommandLineDebugger()
-    {
+    public CommandLineDebugger() {
         breakpoints = new DebugBreakpoints();
     }
 
     @Override
-    public boolean isDebuggerAttached()
-    {
+    public boolean isDebuggerAttached() {
         return isDebuggerAttached;
     }
 
     @Override
-    public void active(boolean isActive)
-    {
+    public void active(boolean isActive) {
         isDebuggerAttached = isActive;
     }
 
     @Override
-    public boolean shouldTakeControl(Chip8System.SystemState systemState)
-    {
+    public boolean shouldTakeControl(Chip8System.SystemState systemState) {
         // default breakpoint at program start
         if (shouldTakeControl || systemState.getProgramCounter() == 0x200)
             return true;
@@ -48,26 +44,21 @@ public class CommandLineDebugger implements Chip8Debugger,Chip8Debugger.Debugger
     }
 
     @Override
-    public void takeControl(Chip8System.SystemState systemState)
-    {
+    public void takeControl(Chip8System.SystemState systemState) {
         singleStep(systemState);
     }
 
-    private void singleStep(Chip8System.SystemState systemState)
-    {
-        System.out.println(String.format("BREAK at address %04X",systemState.getProgramCounter()));
+    private void singleStep(Chip8System.SystemState systemState) {
+        System.out.println(String.format("BREAK at address %04X", systemState.getProgramCounter()));
         //disassemble a few commands from current PC to create context
         disassembleProgramAtAddress(systemState);
         Scanner inputScanner = ConsoleInput.getInput();
         boolean getMoreInput = true;
-        while (getMoreInput)
-        {
+        while (getMoreInput) {
             System.out.print("(PAUSED)>");
-            try
-            {
+            try {
                 String command = inputScanner.nextLine().toLowerCase();
-                if (command.isEmpty())
-                {
+                if (command.isEmpty()) {
                     disassembleProgramAtAddress(systemState);
                     continue;
                 }
@@ -76,29 +67,25 @@ public class CommandLineDebugger implements Chip8Debugger,Chip8Debugger.Debugger
                 shouldTakeControl = debuggerCommand.shouldTakeControlAfterNextCommand();
                 if (debuggerCommand.shouldResumeExecution())
                     break;
-            }catch (Throwable e)
-            {
+            } catch (Throwable e) {
                 System.out.println("what??? I don't know that command.");
             }
         }
     }
 
-    private void disassembleProgramAtAddress(Chip8System.SystemState systemState)
-    {
+    private void disassembleProgramAtAddress(Chip8System.SystemState systemState) {
         // disassemble the next 5 commands
         int programCounter = systemState.getProgramCounter();
         byte[] ram = systemState.getRam();
-        for (int i = 0; i < NUM_OF_INSTRUCTION_TO_DECOMPILE; i++)
-        {
+        for (int i = 0; i < NUM_OF_INSTRUCTION_TO_DECOMPILE; i++) {
             ChipInstruction instruction = instructionParser.decode(programCounter, ram[programCounter], ram[programCounter + 1]);
-            System.out.println(String.format("  %04X  %S  %S",instruction.getAddress(),instruction.getOpcodes(),instruction.getMnemonic()));
+            System.out.println(String.format("  %04X  %S  %S", instruction.getAddress(), instruction.getOpcodes(), instruction.getMnemonic()));
             programCounter += 2;
         }
     }
 
     @Override
-    public DebugBreakpoints getBreakpoints()
-    {
+    public DebugBreakpoints getBreakpoints() {
         return breakpoints;
     }
 }

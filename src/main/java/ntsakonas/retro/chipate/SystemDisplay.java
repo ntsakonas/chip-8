@@ -1,6 +1,6 @@
 package ntsakonas.retro.chipate;
 
-public interface SystemDisplay
-{
+public interface SystemDisplay {
+
     void refresh(byte[] vram);
 }

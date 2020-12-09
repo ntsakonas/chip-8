@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
     Emulates the 60Hz tick that increments the tick counter (used in most programs for time keeping)
  */
 public class RealTimeClock {
+
     private ScheduledExecutorService rtcExecutor;
 
     RealTimeClock() {

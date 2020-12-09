@@ -1,7 +1,6 @@
 package ntsakonas.retro.chipate.simulator;
 
-interface ChipInstructionMicrocode
-{
+interface ChipInstructionMicrocode {
 
     // microcode can be
     // reg -> A

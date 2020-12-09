@@ -1,6 +1,6 @@
 package ntsakonas.retro.chipate;
 
-public interface SystemInput
-{
+public interface SystemInput {
+
     char getKey();
 }
