@@ -77,15 +77,15 @@ public class ChipUI {
     }
 
 
-    public void startSimulatorUI(String romPath) throws IOException {
+    public void startSimulatorUI(String romPath, boolean attachDebugger) throws IOException {
         final byte[] romBytes = Files.readAllBytes(Paths.get(romPath));
         javax.swing.SwingUtilities.invokeLater(() -> {
             createAndShowGUI();
             Keyboard keyboard = new Keyboard();
             connectKeyboard(keyboard);
             simulator = new Simulator(keyboard, getSystemDisplay());
-            // TESTING THE DEBUGGER
-            simulator.attachDebugger(new CommandLineDebugger());
+            if (attachDebugger)
+                simulator.attachDebugger(new CommandLineDebugger());
             simulator.run(romBytes);
         });
     }
@@ -106,13 +106,15 @@ public class ChipUI {
 
     public static void main(String[] args) throws IOException {
         if (args.length == 0) {
-            System.out.println("--- Chip-8 simulator by Nick Tsakonas (c) 2018");
-            System.out.println("--- usage simulator input.rom [base]");
-            System.out.println("          input.rom  - the rom to execute (located at 0x0200)");
+            System.out.println("--- Chip-8 simulator by Nick Tsakonas (c) 2018 ---");
+            System.out.println("usage: simulator input.rom [--debug]\n");
+            System.out.println(" input.rom - the rom to execute (located at 0x0200)");
+            System.out.println(" --debug   - optional, attach the debugger");
             return;
         }
+        boolean attachDebugger = args.length == 2 && args[1].equals("--debug");
         ChipUI ui = new ChipUI();
-        ui.startSimulatorUI(args[0]);
+        ui.startSimulatorUI(args[0], attachDebugger);
     }
 
 }
