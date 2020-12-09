@@ -191,3 +191,6 @@ ADDR --------------------- HEX --------------------- ----- ASCII ----
 02E0 D4 55 74 15 F2 29 D4 55 00 EE 80 80 80 80 80 80 .Ut....U........
 02F0 80 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
 (PAUSED)>
+
+# License
+This work is released under the GNU General Public License v3.0
