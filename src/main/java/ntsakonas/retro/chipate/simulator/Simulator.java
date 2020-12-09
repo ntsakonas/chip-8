@@ -87,10 +87,12 @@ public class Simulator
         // it is no known how many instructions were executed per CHIP8 instruction
         // but lets assume 20.. that means each CHIP8 instruction would last 90.8 microSec
         // lets sleep for this time to emulate the original timing
-        // NOTE: the minimum delays obtainable in Java is 1 msec, which is fine.
+        // UPDATE: using 1ms the emulations is very fast. using an emulated clock of 500Hz as described here
+        // https://jackson-s.me/2019/07/13/Chip-8-Instruction-Scheduling-and-Frequency.html
+        // the emulation speed is better
         try
         {
-            Thread.sleep(1L);
+            Thread.sleep(2L);
         } catch (InterruptedException e)
         {
             e.printStackTrace();

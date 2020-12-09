@@ -98,7 +98,6 @@ public class Chip8System
     {
         synchronized (timerLock)
         {
-           // System.out.println("tick "+timerTick);
             if (timerTick > 0)
                 --timerTick;
         }
@@ -277,10 +276,7 @@ public class Chip8System
             {
                 // NOTE:: this is a blocking method.
                 // it will return when a key is pressed and then released
-                System.out.println("waiting for key...");
-                byte b = keyboard.waitForKey();
-                System.out.println("key "+b+" pressed...");
-                return b;
+                return keyboard.waitForKey();
             }
 
             @Override
@@ -312,7 +308,7 @@ public class Chip8System
             {
                 // check specs how tone is supposed to work
                 // check the existing emulator how it does it
-                // todo :9mplement tone
+                // todo :Implement tone
             }
 
             @Override
