@@ -55,7 +55,7 @@ public class Keyboard implements KeyboardInput , KeyboardQueue
     }
 
 
-    private ScheduledExecutorService keyboardExecutor = Executors.newSingleThreadScheduledExecutor();;
+    private ScheduledExecutorService keyboardExecutor = Executors.newSingleThreadScheduledExecutor();
 
 
     public Keyboard()
@@ -73,7 +73,7 @@ public class Keyboard implements KeyboardInput , KeyboardQueue
     public byte waitForKey()
     {
         // we have to ignore existing keystrokes
-        keyboardBuffer.clear();
+        // keyboardBuffer.clear();
         try
         {
             System.out.println("waitForKey() enter");
