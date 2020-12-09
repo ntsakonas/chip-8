@@ -1,7 +1,7 @@
 package ntsakonas.retro.chipate.decompiler;
 
-import ntsakonas.retro.chipate.instructions.ChipInstruction;
-import ntsakonas.retro.chipate.instructions.Instructions;
+import ntsakonas.retro.chipate.decompiler.instructions.ChipInstruction;
+import ntsakonas.retro.chipate.decompiler.instructions.Instructions;
 
 import java.io.IOException;
 import java.nio.file.Files;

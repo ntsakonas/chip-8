@@ -2,8 +2,8 @@ package ntsakonas.retro.chipate.debugger;
 
 import ntsakonas.retro.chipate.ConsoleInput;
 import ntsakonas.retro.chipate.debugger.commands.DebuggerCommand;
-import ntsakonas.retro.chipate.instructions.ChipInstruction;
-import ntsakonas.retro.chipate.instructions.Instructions;
+import ntsakonas.retro.chipate.decompiler.instructions.ChipInstruction;
+import ntsakonas.retro.chipate.decompiler.instructions.Instructions;
 import ntsakonas.retro.chipate.simulator.Chip8System;
 
 import java.util.Scanner;

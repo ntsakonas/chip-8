@@ -1,4 +1,4 @@
-package ntsakonas.retro.chipate.instructions;
+package ntsakonas.retro.chipate.decompiler.instructions;
 
 public interface ChipInstruction {
 

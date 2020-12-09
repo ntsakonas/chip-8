@@ -1,6 +1,6 @@
 package ntsakonas.retro.chipate.simulator;
 
-import ntsakonas.retro.chipate.instructions.OpcodeUtil;
+import ntsakonas.retro.chipate.decompiler.instructions.OpcodeUtil;
 
 import java.util.Random;
 

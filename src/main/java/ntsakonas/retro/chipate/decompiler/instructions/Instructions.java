@@ -1,7 +1,7 @@
-package ntsakonas.retro.chipate.instructions;
+package ntsakonas.retro.chipate.decompiler.instructions;
 
 
-import ntsakonas.retro.chipate.instructions.originalset.*;
+import ntsakonas.retro.chipate.decompiler.instructions.originalset.*;
 
 public class Instructions {
 

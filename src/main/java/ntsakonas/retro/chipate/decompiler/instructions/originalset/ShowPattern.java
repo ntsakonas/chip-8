@@ -1,7 +1,7 @@
-package ntsakonas.retro.chipate.instructions.originalset;
+package ntsakonas.retro.chipate.decompiler.instructions.originalset;
 
-import ntsakonas.retro.chipate.instructions.BaseChipInstruction;
-import ntsakonas.retro.chipate.instructions.OpcodeUtil;
+import ntsakonas.retro.chipate.decompiler.instructions.BaseChipInstruction;
+import ntsakonas.retro.chipate.decompiler.instructions.OpcodeUtil;
 
 public class ShowPattern extends BaseChipInstruction {
 

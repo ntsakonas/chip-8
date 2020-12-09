@@ -1,6 +1,6 @@
-package ntsakonas.retro.chipate.instructions.originalset;
+package ntsakonas.retro.chipate.decompiler.instructions.originalset;
 
-import ntsakonas.retro.chipate.instructions.BaseChipInstruction;
+import ntsakonas.retro.chipate.decompiler.instructions.BaseChipInstruction;
 
 public class ReturnFromSubroutine extends BaseChipInstruction {
 
