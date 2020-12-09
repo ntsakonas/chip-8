@@ -19,7 +19,7 @@ So in some cases a semantically similar mnemonic is used, influenced by higer le
 For example, 
 - `SKIP NEXT IF V3 == 0` instead of `SKIP;V3 EQ 0`
 - `SKIP NEXT IF V0 != HEXKEY` instead of `SKIP;V0 NE KEY`
-- `V1 &= V0` instead of `V1 = V1 + V0`
+- `V1 &= V0` instead of `V1 = V1 AND V0`
 - `V1 += V0` instead of `V1 = V1 + V0`
 
 here is an example of decompiling the `maze.rom`
@@ -53,7 +53,7 @@ ADDR  OPCD  MNEMONIC
 
 
 ## Simulator
-The simulator is not trying to be a cycle-accurate simulator but quite close to what the original system might be like.
+The simulator is not trying to be a cycle-accurate simulator but only close to what the original system might be like.
 There is one function missing, the generation of sound (the beep command).
 
 A set of roms found for free is included in the `roms` folder. I have tested extensively all of those and compared the output 
@@ -62,7 +62,7 @@ any glitch.
 
 The keyboard mapping for the simulator is just a convenient one for a PC keyabord and not the one found in the manual.
 
-the mapping is as follows:
+The key mapping is as follows:
 
 |Chip key| PC key|
 |---|---|
