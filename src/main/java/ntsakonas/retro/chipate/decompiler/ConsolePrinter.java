@@ -1,5 +1,6 @@
-package ntsakonas.retro.chipate;
+package ntsakonas.retro.chipate.decompiler;
 
+import ntsakonas.retro.chipate.decompiler.AsmPrinter;
 import ntsakonas.retro.chipate.instructions.ChipInstruction;
 
 public class ConsolePrinter implements AsmPrinter {

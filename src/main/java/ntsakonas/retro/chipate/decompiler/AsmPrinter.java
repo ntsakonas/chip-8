@@ -1,4 +1,4 @@
-package ntsakonas.retro.chipate;
+package ntsakonas.retro.chipate.decompiler;
 
 import ntsakonas.retro.chipate.instructions.ChipInstruction;
 
