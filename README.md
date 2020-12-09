@@ -75,7 +75,7 @@ The key mapping is as follows:
 | F | C|
 
 
-Every game has its own keymap, some of those are documented in the [Chip8 Reference Manual][docs/Chip8 Reference Manual - Peter Miller.pdf] 
+Every game has its own keymap, some of those are documented in the _Chip8 Reference Manual - Peter Miller.pdf_ 
 found in the docs folder.
 
 ## Debugger
