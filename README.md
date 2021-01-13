@@ -57,7 +57,7 @@ The simulator is not trying to be a cycle-accurate simulator but only close to w
 There is one function missing, the generation of sound (the beep command).
 
 A set of roms found for free is included in the `roms` folder. I have tested extensively all of those and compared the output 
-with other simulators online. There are a couple of them behaving differently (and I am not sure why) but most of them work without
+with other simulators online. There are a couple of roms behaving differently (and I am not sure why) but most of them work without
 any glitch.
 
 The keyboard mapping for the simulator is just a convenient one for a PC keyabord and not the one found in the manual.
